@@ -2,11 +2,11 @@ package com.jphaugla.controller;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import com.jphaugla.data.BankGenerator;
 import com.jphaugla.domain.*;
 
 
@@ -17,6 +17,8 @@ import com.jphaugla.repository.AccountRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import com.jphaugla.service.BankService;
 
 @RestController
 public class BankingController {
@@ -29,11 +31,12 @@ public class BankingController {
 	private CustomerRepository customerRepository;
 	@Autowired
 	private TransactionRepository transactionRepository;
+	@Autowired
+	private BankService bankService = BankService.getInstance();
 	// customer
 	@RequestMapping("/save_customer")
 	public String saveCustomer() throws ParseException {
 		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
-		Date birth_date = new SimpleDateFormat("yyyy.MM.dd").parse("1949.01.23");
 		Date last_update = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.29");
 		Email home_email = new Email("jasonhaugland@gmail.com", "home");
 		Email work_email = new Email("jason.haugland@redislabs.com", "work");
@@ -41,7 +44,7 @@ public class BankingController {
 		Customer customer = new Customer( "cust0001", "4744 17th av s", "",
 				"Home", "N", "Minneapolis", "00",
 				"jph", create_date, "IDR",
-				"A", "BANK", birth_date,
+				"A", "BANK", "1949.01.23",
 				"Ralph", "Ralph Waldo Emerson", "M",
 				"887778989", "SSN", "Emerson", last_update,
 				"jph", "Waldo",  "MR",
@@ -57,8 +60,9 @@ public class BankingController {
 	@RequestMapping("/save_account")
 	public String saveAccount() throws ParseException {
 		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2010.03.28");
-		Account account = new Account( "cust001:acct001", "cust001", "acct001",
-				"credit", "teller", "active", create_date);
+		Account account = new Account("cust001", "acct001",
+				"credit", "teller", "active", create_date,
+				null, null, null,null);
 		accountRepository.save(account);
 		return "Done";
 	}
@@ -68,12 +72,12 @@ public class BankingController {
 		Date newDate = new Date ();
 		Date expire_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
 		Date init_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.27");
-		Transaction transaction = new Transaction("acct01:12345", "acct01",
+		Transaction transaction = new Transaction(1234, "acct01",
 				"personal", "Debit", 400.23, "Silly",
 				"5411", "Grocery Stores",
 				"Cub Foods", 323.22, "referenceKeyType",
 				"referenceKeyValue", 323.22, "tranCd" ,
-				"Test Transaction", expire_date, 1234, init_date,
+				"Test Transaction", expire_date, init_date,
 				 newDate, "OK", "tranType", "transRsnCd",
 				"transRsnDesc", "transRsnType", "transRespCd" ,
 				"transRespDesc", "transRespType" ,
@@ -81,7 +85,17 @@ public class BankingController {
 		transactionRepository.save(transaction);
 		return "Done";
 	}
-    //    user
+	@GetMapping("/generateData")
+	@ResponseBody
+	public String generateData (@RequestParam Integer noOfCustomers, @RequestParam Integer noOfTransactions, @RequestParam Integer noOfDays,
+								@RequestParam Integer noOfThreads) throws ParseException {
+
+		bankService.generateData(noOfCustomers, noOfTransactions, noOfDays, noOfThreads);
+
+		return "Done";
+	}
+
+	//    user
 	@RequestMapping("/save_user")
 	public String saveUser() {
 		// Role role = new Role("1", "CEO");

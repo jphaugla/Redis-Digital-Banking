@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface AccountRepository extends CrudRepository<Account, String> {
 
-	List<Account> findByFirstNameAndLastName(String firstName, String lastName);
+	List<Account> getAccounts(String customer_id);
 
 }

@@ -33,7 +33,7 @@ public class Customer {
     private  String customer_origin_system;
     private  String customer_status;
     private  String customer_type;
-    private  Date date_of_birth;
+    private  String date_of_birth;
     private  @Indexed String first_name;
     private  @Indexed String full_name;
     private  String gender;

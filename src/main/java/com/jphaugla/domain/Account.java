@@ -16,11 +16,14 @@ import java.util.Date;
 
 
 public class Account {
-    private @Id String account_key;
+    private @Id String account_no;
     private @Indexed String customer_id;
-    private @Indexed String account_no;
     private String account_type;
     private String account_origin_system;
     private @Indexed String account_status;
     private Date open_date;
+    private  Date   last_updated;
+    private  String last_updated_by;
+    private  String created_by;
+    private Date created_date;
 }
