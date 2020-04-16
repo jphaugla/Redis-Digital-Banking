@@ -52,23 +52,7 @@ java -jar target/redis-0.0.1-SNAPSHOT.jar
 3.  Test the application from a separate terminal window
   * save some "in-code" values
 ```bash
-./scripts/saveUser.sh
-```
-  * save using a json file
-```bash
-./scripts/putUser.sh
-```
-  * retrieve by first and lastname	
-```bash
-./scripts/getByname.sh
-```
-  * retrieve one user by user id
-```bash
-./scripts/getByID.sh
-```
-  * delete the second value
-```bash
-curl http://localhost:8080/delete?id=2
+./scripts/generateData.sh
 ```
 ## Redis CRUD indexing strategy
 Very exciting that using the CRUD repository, a field in the java class with the Indexed annotation is treated as an index.
