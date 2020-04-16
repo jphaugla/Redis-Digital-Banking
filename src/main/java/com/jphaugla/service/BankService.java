@@ -15,7 +15,6 @@ import com.jphaugla.domain.Transaction;
 import com.jphaugla.repository.AccountRepository;
 import com.jphaugla.repository.TransactionRepository;
 import com.jphaugla.repository.CustomerRepository;
-import com.jphaugla.repository.UserRepository;
 import com.jphaugla.service.KillableRunner;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -32,10 +31,7 @@ public class BankService {
 
 	private long timerSum = 0;
 	private AtomicLong timerCount= new AtomicLong();
-	
 
-	@Autowired
-	private UserRepository userRepository;
 	@Autowired
 	private AccountRepository accountRepository;
 	@Autowired
