@@ -65,7 +65,7 @@ public class BankingController {
 		Date newDate = new Date ();
 		Date expire_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
 		Date init_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.27");
-		Transaction transaction = new Transaction(1234, "acct01",
+		Transaction transaction = new Transaction("1234", "acct01",
 				"personal", "Debit", 400.23, "Silly",
 				"5411", "Grocery Stores",
 				"Cub Foods", 323.22, "referenceKeyType",
@@ -81,9 +81,9 @@ public class BankingController {
 	@GetMapping("/generateData")
 	@ResponseBody
 	public String generateData (@RequestParam Integer noOfCustomers, @RequestParam Integer noOfTransactions, @RequestParam Integer noOfDays,
-								@RequestParam Integer noOfThreads) throws ParseException {
+								@RequestParam Integer noOfThreads, @RequestParam String key_suffix) throws ParseException {
 
-		bankService.generateData(noOfCustomers, noOfTransactions, noOfDays, noOfThreads);
+		bankService.generateData(noOfCustomers, noOfTransactions, noOfDays, noOfThreads, key_suffix);
 
 		return "Done";
 	}

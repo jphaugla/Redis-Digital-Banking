@@ -131,13 +131,13 @@ public class BankService {
 	 */
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,
-									  Integer noOfThreads) throws ParseException {
+									  Integer noOfThreads, String key_suffix) throws ParseException {
 		BlockingQueue<Transaction> queue = new ArrayBlockingQueue<Transaction>(1000);
 		List<KillableRunner> tasks = new ArrayList<>();
 
 		//Executor for Threads
 		ExecutorService executor = Executors.newFixedThreadPool(noOfThreads);
-		List<Account> accounts = createCustomerAccount(noOfCustomers);
+		List<Account> accounts = createCustomerAccount(noOfCustomers, key_suffix);
 		for (int i = 0; i < noOfThreads; i++) {
 
 			KillableRunner task = new TransactionWriter(transactionRepository, queue);
@@ -149,12 +149,13 @@ public class BankService {
 
 		int totalTransactions = noOfTransactions * noOfDays;
 
-		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers + " customers.");
+		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers + " customers using "
+					+ noOfThreads + " threads and suffix of " + key_suffix);
 		int account_size = accounts.size();
 		for (int i = 0; i < totalTransactions; i++) {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
 			try {
-				Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account);
+				Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
 				if (randomTransaction != null) {
 					queue.put(randomTransaction);
 				}
@@ -167,18 +168,19 @@ public class BankService {
 
 		}
 		transTimer.end();
-		logger.info("Finished writing " + totalTransactions + " created in " + transTimer.getTimeTakenSeconds() + " seconds.");
+		logger.info("Finished writing " + totalTransactions + " created in " +
+				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
 
-	private  List<Account> createCustomerAccount(int noOfCustomers){
+	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix){
 
-		logger.info("Creating " + noOfCustomers + " customers with accounts");
+		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix ", key_suffix);
 		BankGenerator.Timer custTimer = new BankGenerator.Timer();
 		List<Account> accounts = null;
 		for (int i=0; i < noOfCustomers; i++){
-			Customer customer = BankGenerator.createRandomCustomer();
-			accounts = BankGenerator.createRandomAccountsForCustomer(customer);
+			Customer customer = BankGenerator.createRandomCustomer(key_suffix);
+			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
 
 			customerRepository.save(customer);
 			for (Account account : accounts){

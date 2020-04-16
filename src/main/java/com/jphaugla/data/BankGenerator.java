@@ -36,9 +36,10 @@ public class BankGenerator {
 		return BASE + new Double(Math.random()*noOfCustomers).intValue() + "";
 	}
 	
-	public static Customer createRandomCustomer() {
+	public static Customer createRandomCustomer(String key_suffix) {
 		
-		String customerId = BASE + customerIdGenerator.getAndIncrement() + "";
+		String customerIdInt = BASE + customerIdGenerator.getAndIncrement() + "";
+		String customerId = customerIdInt + key_suffix;
 
 		Customer customer = new Customer();
 		customer.setCustomer_id(customerId);
@@ -55,9 +56,9 @@ public class BankGenerator {
 		customer.setCustomer_status("A");
 		customer.setCountry_code("00");
         customer.setGovernment_id("TIN");
-        customer.setGovernment_id_type(customerId.substring(1));
+        customer.setGovernment_id_type(customerIdInt.substring(1));
 
-		int lastDigit = Integer.parseInt(customerId.substring(6));
+		int lastDigit = Integer.parseInt(customerIdInt.substring(6));
 		if (lastDigit>7) {
 			customer.setAddress_line2("Apt " + customerId);
 			customer.setAddress_type("Apartment");
@@ -104,7 +105,7 @@ public class BankGenerator {
 		return customer;
 	}
 
-	public static List<Account> createRandomAccountsForCustomer(Customer customer) {
+	public static List<Account> createRandomAccountsForCustomer(Customer customer, String key_suffix) {
 		
 		int noOfAccounts = Math.random() < .1 ? 4 : 3;
 		List<Account> accounts = new ArrayList<Account>();
@@ -113,7 +114,7 @@ public class BankGenerator {
 		for (int i = 0; i < noOfAccounts; i++){
 			
 			Account account = new Account();
-			String accountNumber = "Acct" + Integer.toString(i);
+			String accountNumber = "Acct" + Integer.toString(i) + key_suffix;
 			account.setCustomer_id(customer.getCustomer_id());
 			account.setAccount_no(accountNumber);
 			account.setAccount_type(accountTypes.get(i));
@@ -132,16 +133,16 @@ public class BankGenerator {
 		
 		return accounts;
 	}
-	public static Transaction createRandomTransaction(int noOfDays,  Integer idx, Account account) {
+	public static Transaction createRandomTransaction(int noOfDays,  Integer idx, Account account, String key_suffix) {
 
 		int noOfMillis = noOfDays * DAY_MILLIS;
 		// create time by adding a random no of millis
 		DateTime newDate = date.plusMillis(new Double(Math.random() * noOfMillis).intValue() + 1);
 
-		return createRandomTransaction(newDate, idx, account);
+		return createRandomTransaction(newDate, idx, account, key_suffix);
 	}
 	public static Transaction createRandomTransaction(DateTime newDate,
-													  Integer idx, Account account) {
+													  Integer idx, Account account, String key_suffix) {
 
 
 
@@ -157,12 +158,12 @@ public class BankGenerator {
 		tags.add(note);
 		tags.add(tag);
 		Date aNewDate = newDate.toDate();
-        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(aNewDate);
 
 		Transaction transaction = new Transaction();
 		createItemsAndAmount(noOfItems, transaction);
 		transaction.setAccount_no(account.getAccount_no());
-		transaction.setTranId(idx);
+		String tran_id = idx.toString() + key_suffix;
+		transaction.setTranId(tran_id);
         transaction.setCardNum( UUID.randomUUID().toString().replace('-','x'));
 		transaction.setTimestamp(aNewDate);
 		transaction.setLocation(location);

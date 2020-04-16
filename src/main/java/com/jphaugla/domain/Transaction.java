@@ -16,7 +16,7 @@ import java.util.Date;
 @RedisHash("transaction")
 
 public class Transaction {
-    private @Id Integer tranId;
+    private @Id String tranId;
     private @Indexed String account_no;
     private String account_type;
     private String amount_type;
