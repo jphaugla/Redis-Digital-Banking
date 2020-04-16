@@ -2,6 +2,10 @@ package com.jphaugla.service;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.jphaugla.data.BankGenerator;
@@ -12,6 +16,7 @@ import com.jphaugla.repository.AccountRepository;
 import com.jphaugla.repository.TransactionRepository;
 import com.jphaugla.repository.CustomerRepository;
 import com.jphaugla.repository.UserRepository;
+import com.jphaugla.service.KillableRunner;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,9 +136,18 @@ public class BankService {
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,
 									  Integer noOfThreads) throws ParseException {
+		BlockingQueue<Transaction> queue = new ArrayBlockingQueue<Transaction>(1000);
+		List<KillableRunner> tasks = new ArrayList<>();
 
-		List <Account> accounts = createCustomerAccount(noOfCustomers);
+		//Executor for Threads
+		ExecutorService executor = Executors.newFixedThreadPool(noOfThreads);
+		List<Account> accounts = createCustomerAccount(noOfCustomers);
+		for (int i = 0; i < noOfThreads; i++) {
 
+			KillableRunner task = new TransactionWriter(transactionRepository, queue);
+			executor.execute(task);
+			tasks.add(task);
+		}
 		BankGenerator.date = new DateTime().minusDays(noOfDays).withTimeAtStartOfDay();
 		BankGenerator.Timer transTimer = new BankGenerator.Timer();
 
@@ -143,8 +157,18 @@ public class BankService {
 		int account_size = accounts.size();
 		for (int i = 0; i < totalTransactions; i++) {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
-			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays,  i, account);
-			transactionRepository.save(randomTransaction);
+			try {
+				Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account);
+				if (randomTransaction != null) {
+					queue.put(randomTransaction);
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if (i % 10000 == 0) {
+				sleep(10);
+			}
+
 		}
 		transTimer.end();
 		logger.info("Finished writing " + totalTransactions + " created in " + transTimer.getTimeTakenSeconds() + " seconds.");
