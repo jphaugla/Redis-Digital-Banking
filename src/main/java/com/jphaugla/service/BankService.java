@@ -156,19 +156,20 @@ public class BankService {
 		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers + " customers using "
 					+ noOfThreads + " threads and suffix of " + key_suffix);
 		int account_size = accounts.size();
-		ArrayList<Transaction> transactions = new ArrayList<>();
+		// ArrayList<Transaction> transactions = new ArrayList<>();
 		for (int i = 0; i < totalTransactions; i++) {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
 			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
-			transactions.add(randomTransaction);
+			// transactions.add(randomTransaction);
+			transactionRepository.save(randomTransaction);
 			if (i % 10000 == 0) {
 				logger.info("writing transactions total so far=" + i);
-				transactionRepository.saveAll(transactions);
-				transactions.clear();
+				// transactionRepository.saveAll(transactions);
+				// transactions.clear();
 			}
 
 		}
-		transactionRepository.saveAll(transactions);
+		// transactionRepository.saveAll(transactions);
 		transTimer.end();
 		logger.info("Finished writing " + totalTransactions + " created in " +
 				transTimer.getTimeTakenSeconds() + " seconds.");
@@ -180,16 +181,18 @@ public class BankService {
 		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix ", key_suffix);
 		BankGenerator.Timer custTimer = new BankGenerator.Timer();
 		List<Account> accounts = null;
-		ArrayList<Account> allAccounts = new ArrayList<>();
-		ArrayList<Customer> customers = new ArrayList<>();
+		// ArrayList<Account> allAccounts = new ArrayList<>();
+		// ArrayList<Customer> customers = new ArrayList<>();
 		for (int i=0; i < noOfCustomers; i++){
 			Customer customer = BankGenerator.createRandomCustomer(key_suffix);
-			customers.add(customer);
+			// customers.add(customer);
 			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
-			allAccounts.addAll(accounts);
+			// allAccounts.addAll(accounts);
+			accountRepository.saveAll(accounts);
+			customerRepository.save(customer);
 		}
-		customerRepository.saveAll(customers);
-		accountRepository.saveAll(allAccounts);
+		// customerRepository.saveAll(customers);
+		// accountRepository.saveAll(allAccounts);
 
 		custTimer.end();
 		logger.info("Customers and Accounts created in " + custTimer.getTimeTakenSeconds() + " secs");
