@@ -20,6 +20,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -161,7 +162,7 @@ public class BankService {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
 			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
 			// transactions.add(randomTransaction);
-			transactionRepository.save(randomTransaction);
+			writeTransaction(randomTransaction);
 			if (i % 10000 == 0) {
 				logger.info("writing transactions total so far=" + i);
 				// transactionRepository.saveAll(transactions);
@@ -175,7 +176,18 @@ public class BankService {
 				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
-
+	@Async
+	private void writeTransaction(Transaction transaction) {
+		transactionRepository.save(transaction);
+	}
+	@Async
+	private void writeAccounts(List<Account> accounts){
+		accountRepository.saveAll(accounts);
+	}
+	@Async
+	private void writeCustomer(Customer customer) {
+		customerRepository.save(customer);
+	}
 	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix){
 
 		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix ", key_suffix);
@@ -188,8 +200,8 @@ public class BankService {
 			// customers.add(customer);
 			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
 			// allAccounts.addAll(accounts);
-			accountRepository.saveAll(accounts);
-			customerRepository.save(customer);
+			writeAccounts(accounts);
+			writeCustomer(customer);
 		}
 		// customerRepository.saveAll(customers);
 		// accountRepository.saveAll(allAccounts);

@@ -15,8 +15,4 @@ public interface TransactionRepository extends CrudRepository<Transaction, Strin
 
 	List<Transaction> findByRole_RoleName(String roleName);
 
-	@Async
-	default <T extends Transaction> T save(T Transaction) {
-		return null;
-	}
 }

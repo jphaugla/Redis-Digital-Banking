@@ -14,8 +14,4 @@ public interface CustomerRepository extends CrudRepository<Customer, String> {
 
 	List<Customer> findByRole_RoleName(String roleName);
 
-	@Async
-	default <C extends Customer> C save(C Customer) {
-		return null;
-	}
 }
