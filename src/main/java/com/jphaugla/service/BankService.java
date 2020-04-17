@@ -163,7 +163,7 @@ public class BankService {
 			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
 			// transactions.add(randomTransaction);
 			writeTransaction(randomTransaction);
-			if (i % 10000 == 0) {
+			if ((i % 10000 == 0) && (i > 0)) {
 				logger.info("writing transactions total so far=" + i);
 				// transactionRepository.saveAll(transactions);
 				// transactions.clear();
@@ -176,15 +176,16 @@ public class BankService {
 				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
-	@Async
+	@Async("threadPoolTaskExecutor")
 	private void writeTransaction(Transaction transaction) {
 		transactionRepository.save(transaction);
 	}
-	@Async
+
+	@Async("threadPoolTaskExecutor")
 	private void writeAccounts(List<Account> accounts){
 		accountRepository.saveAll(accounts);
 	}
-	@Async
+	@Async("threadPoolTaskExecutor")
 	private void writeCustomer(Customer customer) {
 		customerRepository.save(customer);
 	}
