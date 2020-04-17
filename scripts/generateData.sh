@@ -1,2 +1,2 @@
-curl 'http://localhost:8080/generateData?noOfCustomers=100&noOfTransactions=5000&noOfDays=5&noOfThreads=5&key_suffix=J'
+curl 'http://localhost:8080/generateData?noOfCustomers=1000&noOfTransactions=10000&noOfDays=5&&key_suffix=J'
 

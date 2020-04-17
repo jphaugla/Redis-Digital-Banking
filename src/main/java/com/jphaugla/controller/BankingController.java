@@ -3,6 +3,7 @@ package com.jphaugla.controller;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 import com.jphaugla.domain.*;
 
@@ -80,10 +81,11 @@ public class BankingController {
 	}
 	@GetMapping("/generateData")
 	@ResponseBody
-	public String generateData (@RequestParam Integer noOfCustomers, @RequestParam Integer noOfTransactions, @RequestParam Integer noOfDays,
-								@RequestParam Integer noOfThreads, @RequestParam String key_suffix) throws ParseException {
+	public String generateData (@RequestParam Integer noOfCustomers, @RequestParam Integer noOfTransactions,
+								@RequestParam Integer noOfDays, @RequestParam String key_suffix)
+			throws ParseException, ExecutionException, InterruptedException {
 
-		bankService.generateData(noOfCustomers, noOfTransactions, noOfDays, noOfThreads, key_suffix);
+		bankService.generateData(noOfCustomers, noOfTransactions, noOfDays, key_suffix);
 
 		return "Done";
 	}

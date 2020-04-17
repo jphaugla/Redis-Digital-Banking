@@ -2,6 +2,8 @@ package com.jphaugla.service;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.jphaugla.data.BankGenerator;
@@ -118,71 +120,55 @@ public class BankService {
 	 */
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,
-									  Integer noOfThreads, String key_suffix) throws ParseException {
+								String key_suffix)
+			throws ParseException, ExecutionException, InterruptedException {
 
 		List<Account> accounts = createCustomerAccount(noOfCustomers, key_suffix);
-		/* BlockingQueue<Transaction> queue = new ArrayBlockingQueue<Transaction>(1000);
-		List<KillableRunner> tasks = new ArrayList<>();
-
-		//Executor for Threads
-		ExecutorService executor = Executors.newFixedThreadPool(noOfThreads);
-
-		for (int i = 0; i < noOfThreads; i++) {
-
-			KillableRunner task = new TransactionWriter(transactionRepository, queue);
-			executor.execute(task);
-			tasks.add(task);
-		}
-
-		 */
 		BankGenerator.date = new DateTime().minusDays(noOfDays).withTimeAtStartOfDay();
 		BankGenerator.Timer transTimer = new BankGenerator.Timer();
 
 		int totalTransactions = noOfTransactions * noOfDays;
 
-		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers + " customers using "
-					+ noOfThreads + " threads and suffix of " + key_suffix);
+		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers
+				+ " customers. suffix is " + key_suffix);
 		int account_size = accounts.size();
-		// ArrayList<Transaction> transactions = new ArrayList<>();
+		CompletableFuture<Integer> transaction_cntr = null;
 		for (int i = 0; i < totalTransactions; i++) {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
 			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
-			// transactions.add(randomTransaction);
-			asyncService.writeTransaction(randomTransaction);
-			if ((i % 10000 == 0) && (i > 0)) {
-				logger.info("writing transactions total so far=" + i);
-				// transactionRepository.saveAll(transactions);
-				// transactions.clear();
-			}
+			transaction_cntr = asyncService.writeTransaction(randomTransaction);
 
 		}
-		// transactionRepository.saveAll(transactions);
+		transaction_cntr.get();
 		transTimer.end();
 		logger.info("Finished writing " + totalTransactions + " created in " +
 				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
 
-	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix){
+	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix) throws ExecutionException, InterruptedException {
 
-		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix ", key_suffix);
+		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix " + key_suffix);
 		BankGenerator.Timer custTimer = new BankGenerator.Timer();
 		List<Account> accounts = null;
-		// ArrayList<Account> allAccounts = new ArrayList<>();
-		// ArrayList<Customer> customers = new ArrayList<>();
+		CompletableFuture<Integer> account_cntr = null;
+		CompletableFuture<Integer> customer_cntr = null;
+		int totalAccounts = 0;
 		for (int i=0; i < noOfCustomers; i++){
 			Customer customer = BankGenerator.createRandomCustomer(key_suffix);
 			// customers.add(customer);
 			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
+			totalAccounts = totalAccounts + accounts.size();
 			// allAccounts.addAll(accounts);
-			asyncService.writeAccounts(accounts);
-			asyncService.writeCustomer(customer);
+			account_cntr = asyncService.writeAccounts(accounts);
+			customer_cntr = asyncService.writeCustomer(customer);
 		}
-		// customerRepository.saveAll(customers);
-		// accountRepository.saveAll(allAccounts);
 
+		account_cntr.get();
+		customer_cntr.get();
 		custTimer.end();
-		logger.info("Customers and Accounts created in " + custTimer.getTimeTakenSeconds() + " secs");
+		logger.info(noOfCustomers + " Customers and " + totalAccounts +  " Accounts created in "
+				+ custTimer.getTimeTakenSeconds() + " secs");
 		return accounts;
 	}
 

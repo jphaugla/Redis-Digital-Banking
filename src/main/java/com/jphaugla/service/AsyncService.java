@@ -11,6 +11,8 @@ import com.jphaugla.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 
 @Service
@@ -24,17 +26,21 @@ public class AsyncService {
     private TransactionRepository transactionRepository;
 
     @Async("threadPoolTaskExecutor")
-    public void writeTransaction(Transaction transaction) {
+    public CompletableFuture<Integer> writeTransaction(Transaction transaction) {
         transactionRepository.save(transaction);
+        return CompletableFuture.completedFuture(0);
     }
 
     @Async("threadPoolTaskExecutor")
-    public void writeAccounts(List<Account> accounts){
+    public CompletableFuture<Integer> writeAccounts(List<Account> accounts){
+        // Integer count = accounts.size();
         accountRepository.saveAll(accounts);
+        return CompletableFuture.completedFuture(0);
     }
 
     @Async("threadPoolTaskExecutor")
-    public void writeCustomer(Customer customer) {
+    public CompletableFuture<Integer> writeCustomer(Customer customer) {
         customerRepository.save(customer);
+        return CompletableFuture.completedFuture(0);
     }
 }
