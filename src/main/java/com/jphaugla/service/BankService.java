@@ -2,26 +2,16 @@ package com.jphaugla.service;
 
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.jphaugla.data.BankGenerator;
 import com.jphaugla.domain.Account;
 import com.jphaugla.domain.Customer;
 import com.jphaugla.domain.Transaction;
-import com.jphaugla.repository.AccountRepository;
-import com.jphaugla.repository.TransactionRepository;
-import com.jphaugla.repository.CustomerRepository;
-import com.jphaugla.service.KillableRunner;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
