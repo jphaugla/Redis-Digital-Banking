@@ -78,6 +78,7 @@ public class RedisConfig {
     @Bean("threadPoolTaskExecutor")
     public TaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+//        on large 64 core machine, drove setCorePoolSize to 200 to really spike performance
         executor.setCorePoolSize(20);
         executor.setMaxPoolSize(1000);
         executor.setWaitForTasksToCompleteOnShutdown(true);
