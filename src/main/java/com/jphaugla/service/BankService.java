@@ -20,6 +20,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -28,29 +29,24 @@ import org.springframework.stereotype.Service;
 public class BankService {
 
 	private static BankService bankService = new BankService();
+	@Autowired
+	private AsyncService asyncService;
 	private static final Logger logger = LoggerFactory.getLogger(BankService.class);
 
 	private long timerSum = 0;
 	private AtomicLong timerCount= new AtomicLong();
-
-	@Autowired
-	private AccountRepository accountRepository;
-	@Autowired
-	private CustomerRepository customerRepository;
-	@Autowired
-	private TransactionRepository transactionRepository;
-
-
 	
 	public static BankService getInstance(){
 		return bankService;		
 	}
+
 	
+	/*
 	public Optional<Customer> getCustomer(String customerId){
 		
 		return customerRepository.findById(customerId);
 	}
-	/*
+
 	public List<Customer> getCustomerByPhone(String phoneString){
 		logger.warn("in bankservice getCustByPhone with phone=" + phoneString);
 		List<String> customerIDList = redisDao.getCustomerIdsbyPhone(phoneString);
@@ -162,7 +158,7 @@ public class BankService {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
 			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
 			// transactions.add(randomTransaction);
-			writeTransaction(randomTransaction);
+			asyncService.writeTransaction(randomTransaction);
 			if ((i % 10000 == 0) && (i > 0)) {
 				logger.info("writing transactions total so far=" + i);
 				// transactionRepository.saveAll(transactions);
@@ -176,19 +172,7 @@ public class BankService {
 				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
-	@Async("threadPoolTaskExecutor")
-	private void writeTransaction(Transaction transaction) {
-		transactionRepository.save(transaction);
-	}
 
-	@Async("threadPoolTaskExecutor")
-	private void writeAccounts(List<Account> accounts){
-		accountRepository.saveAll(accounts);
-	}
-	@Async("threadPoolTaskExecutor")
-	private void writeCustomer(Customer customer) {
-		customerRepository.save(customer);
-	}
 	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix){
 
 		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix ", key_suffix);
@@ -201,8 +185,8 @@ public class BankService {
 			// customers.add(customer);
 			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
 			// allAccounts.addAll(accounts);
-			writeAccounts(accounts);
-			writeCustomer(customer);
+			asyncService.writeAccounts(accounts);
+			asyncService.writeCustomer(customer);
 		}
 		// customerRepository.saveAll(customers);
 		// accountRepository.saveAll(allAccounts);
