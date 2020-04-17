@@ -1,15 +1,11 @@
 package com.jphaugla.data;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.jphaugla.domain.*;
-import com.jphaugla.repository.CustomerRepository;
 import org.joda.time.DateTime;
-import com.jphaugla.repository.AccountRepository;
-import com.jphaugla.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
