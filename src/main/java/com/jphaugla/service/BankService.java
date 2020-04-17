@@ -137,7 +137,6 @@ public class BankService {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
 			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
 			transaction_cntr = asyncService.writeTransaction(randomTransaction);
-
 		}
 		transaction_cntr.get();
 		transTimer.end();
@@ -156,11 +155,11 @@ public class BankService {
 		int totalAccounts = 0;
 		for (int i=0; i < noOfCustomers; i++){
 			Customer customer = BankGenerator.createRandomCustomer(key_suffix);
-			// customers.add(customer);
 			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
 			totalAccounts = totalAccounts + accounts.size();
-			// allAccounts.addAll(accounts);
-			account_cntr = asyncService.writeAccounts(accounts);
+			for (Account account: accounts) {
+				account_cntr = asyncService.writeAccounts(account);
+			}
 			customer_cntr = asyncService.writeCustomer(customer);
 		}
 

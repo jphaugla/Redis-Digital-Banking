@@ -26,15 +26,27 @@ public class AsyncService {
     private TransactionRepository transactionRepository;
 
     @Async("threadPoolTaskExecutor")
+    public CompletableFuture<Integer> writeAllTransaction(List<Transaction> transactions) {
+        transactionRepository.saveAll(transactions);
+        return CompletableFuture.completedFuture(0);
+    }
+    @Async("threadPoolTaskExecutor")
     public CompletableFuture<Integer> writeTransaction(Transaction transaction) {
         transactionRepository.save(transaction);
         return CompletableFuture.completedFuture(0);
     }
 
     @Async("threadPoolTaskExecutor")
-    public CompletableFuture<Integer> writeAccounts(List<Account> accounts){
+    public CompletableFuture<Integer> writeAllAccounts(List<Account> accounts){
         // Integer count = accounts.size();
         accountRepository.saveAll(accounts);
+        return CompletableFuture.completedFuture(0);
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public CompletableFuture<Integer> writeAccounts(Account account){
+        // Integer count = accounts.size();
+        accountRepository.save(account);
         return CompletableFuture.completedFuture(0);
     }
 

@@ -12,7 +12,7 @@ import java.util.Date;
 @Getter
 @Setter
 
-@RedisHash("account")
+@RedisHash("Account")
 
 
 public class Account {

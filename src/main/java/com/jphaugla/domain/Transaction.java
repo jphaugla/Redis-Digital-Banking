@@ -13,7 +13,7 @@ import java.util.Date;
 @Getter
 @Setter
 
-@RedisHash("transaction")
+@RedisHash("Transaction")
 
 public class Transaction {
     private @Id String tranId;
