@@ -57,13 +57,18 @@ public class BankService {
 		Optional<PhoneNumber> optPhone = getPhoneNumber(phoneString);
 		Optional<Customer> returnCustomer = null;
 		Customer returnCust = null;
+		logger.info("in bankservice.getCustomerByPhone optphone is" + optPhone.isPresent());
 		if (optPhone.isPresent()) {
 			PhoneNumber onePhone = optPhone.get();
 			String customerId = onePhone.getCustomerId();
+			logger.info("customer is " + customerId);
 			returnCustomer = customerRepository.findById(customerId);
 		}
-		if (returnCustomer.isPresent()) {
+
+		if ((returnCustomer != null) && (returnCustomer.isPresent())) {
 			returnCust = returnCustomer.get();
+			logger.info("customer is " + returnCust);
+
 		} else {
 			returnCust = null;
 		}
