@@ -17,9 +17,9 @@ import java.util.Date;
 
 public class Transaction {
     private @Id String tranId;
-    private @Indexed String account_no;
-    private String account_type;
-    private String amount_type;
+    private @Indexed String accountNo;
+    private String accountType;
+    private String amountType;
     private Double amount;
     private String cardNum;
     private String merchantCtygCd;

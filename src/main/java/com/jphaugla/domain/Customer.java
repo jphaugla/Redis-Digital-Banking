@@ -6,11 +6,10 @@ import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Data
 @AllArgsConstructor
@@ -21,40 +20,68 @@ import java.util.stream.Collectors;
 @RedisHash("Customer")
 
 public class Customer {
-    private  @Id String customer_id;
-    private  String address_line1;
-    private  String address_line2;
-    private  String address_type;
-    private  String bill_pay_enrolled;
+    private  @Id String customerId;
+    private  String addressLine1;
+    private  String addressLine2;
+    private  String addressType;
+    private  String billPayEnrolled;
     private  @Indexed String city;
-    private  String country_code;
-    private  String created_by;
-    private Date created_datetime;
-    private  String customer_origin_system;
-    private  String customer_status;
-    private  String customer_type;
-    private  String date_of_birth;
-    private  @Indexed String first_name;
-    private  @Indexed String full_name;
+    private  String countryCode;
+    private  String createdBy;
+    private Date createdDatetime;
+    private  String customerOriginSystem;
+    private  String customerStatus;
+    private  String customerType;
+    private  String dateOfBirth;
+    private  @Indexed String firstName;
+    private  @Indexed String fullName;
     private  String gender;
-    private  String government_id;
-    private  String government_id_type;
-    private  String last_name;
-    private  Date   last_updated;
-    private  String last_updated_by;
-    private  String middle_name;
+    private  String governmentId;
+    private  String governmentIdType;
+    private  @Indexed String lastName;
+    private  Date lastUpdated;
+    private  String lastUpdatedBy;
+    private  String middleName;
     private  String prefix;
-    private  String query_helper_column;
-    private  @Indexed String state_abbreviation;
-    private  String zipcode;
+    private  String queryHelperColumn;
+    private  @Indexed String stateAbbreviation;
+    private  @Indexed String zipcode;
     private  String zipcode4;
-    private  Email home_email;
-    private  Email work_email;
-    private  Email custom_email_1;
-    private  Email custom_email_2;
-    private  PhoneNumber home_phone;
-    private  PhoneNumber work_phone;
-    private  PhoneNumber cell_phone;
-    private  PhoneNumber custom_phone;
+    private  @Reference Email homeEmail;
+    private  @Reference Email workEmail;
+    private  @Reference Email customEmail1;
+    private  @Reference Email customEmail2;
+    private  @Reference PhoneNumber homePhone;
+    private  @Reference PhoneNumber workPhone;
+    private  @Reference PhoneNumber cellPhone;
+    private  @Reference PhoneNumber customPhone;
+
+    public List<Email> getCustomerEmails () {
+        List<Email> emails = new ArrayList<Email>();
+        if(homeEmail != null) emails.add(homeEmail);
+        if(workEmail != null) emails.add(workEmail);
+        if(customEmail1 != null) emails.add(customEmail1);
+        if(customEmail2 != null) emails.add(customEmail2);
+        return emails;
+    }
+    public List<PhoneNumber> getCustomerPhones () {
+        List<PhoneNumber> phones = new ArrayList<PhoneNumber>();
+        if(homePhone != null) phones.add(homePhone);
+        if(workPhone != null) phones.add(workPhone);
+        if(customPhone != null) phones.add(customPhone);
+        return phones;
+    }
+
+    /*
+    private  String homeEmail;
+    private  String workEmail;
+    private  String customEmail1;
+    private  String customEmail2;
+    private  String homePhone;
+    private  String workPhone;
+    private  String cellPhone;
+    private  String customPhone;
+    private String customLabel;
+     */
 
 }

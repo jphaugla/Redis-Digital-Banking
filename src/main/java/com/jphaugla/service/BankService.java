@@ -7,9 +7,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.jphaugla.data.BankGenerator;
-import com.jphaugla.domain.Account;
-import com.jphaugla.domain.Customer;
-import com.jphaugla.domain.Transaction;
+import com.jphaugla.domain.*;
+import com.jphaugla.repository.CustomerRepository;
+import com.jphaugla.repository.EmailRepository;
+import com.jphaugla.repository.PhoneRepository;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,13 @@ public class BankService {
 	private static BankService bankService = new BankService();
 	@Autowired
 	private AsyncService asyncService;
+	@Autowired
+	private CustomerRepository customerRepository;
+	@Autowired
+	private PhoneRepository phoneRepository;
+	@Autowired
+	private EmailRepository emailRepository;
+
 	private static final Logger logger = LoggerFactory.getLogger(BankService.class);
 
 	private long timerSum = 0;
@@ -32,25 +40,46 @@ public class BankService {
 		return bankService;		
 	}
 
-	
-	/*
 	public Optional<Customer> getCustomer(String customerId){
 		
 		return customerRepository.findById(customerId);
 	}
 
-	public List<Customer> getCustomerByPhone(String phoneString){
-		logger.warn("in bankservice getCustByPhone with phone=" + phoneString);
-		List<String> customerIDList = redisDao.getCustomerIdsbyPhone(phoneString);
-		logger.warn("after call to rediDao getCustByPhone" + customerIDList.size());
-		return dao.getCustomerListFromIDs(customerIDList);
+	public Optional<PhoneNumber> getPhoneNumber(String phoneString) {
+		return phoneRepository.findById(phoneString);
+	}
+
+	public Customer getCustomerByPhone(String phoneString) {
+		// get list of customers having this phone number
+		//  first, get phone hash with this phone number
+		//   next, get the customer id with this phone number
+		//   third, use the customer id to get the customer
+		Optional<PhoneNumber> optPhone = getPhoneNumber(phoneString);
+		Optional<Customer> returnCustomer = null;
+		Customer returnCust = null;
+		if (optPhone.isPresent()) {
+			PhoneNumber onePhone = optPhone.get();
+			String customerId = onePhone.getCustomerId();
+			returnCustomer = customerRepository.findById(customerId);
+		}
+		if (returnCustomer.isPresent()) {
+			returnCust = returnCustomer.get();
+		} else {
+			returnCust = null;
+		}
+		return returnCust;
 	}
 
 	public List<Customer> getCustomerByStateCity(String state, String city){
-		List<String> customerIDList = redisDao.getCustomerIdsbyStateCity(state, city);
-		return dao.getCustomerListFromIDs(customerIDList);
+		List<Customer> customerIDList = customerRepository.findByStateAbbreviationAndCity(state, city);
+		return customerIDList;
 	}
 
+	public List<Customer> getCustomerIdsbyZipcodeLastname(String zipcode, String lastName){
+		List<Customer> customerIDList = customerRepository.findByzipcodeAndLastName(zipcode, lastName);
+		return customerIDList;
+	}
+/*
 	public List<Transaction> getMerchantTransactions(String merchant, String account, String to, String from) throws ParseException {
 		List<String> transactionKey = redisDao.getMerchantTransactions(merchant, account, to, from);
 		return dao.getTransactionsfromDelimitedKey(transactionKey);
@@ -61,10 +90,6 @@ public class BankService {
 		return dao.getTransactionsfromDelimitedKey(transactionKey);
 	};
 
-	public List<Customer> getCustomerIdsbyZipcodeLastname(String zipcode, String last_name){
-		List<String> customerIDList = redisDao.getCustomerIdsbyZipcodeLastname(zipcode, last_name);
-		return dao.getCustomerListFromIDs(customerIDList);
-	}
 
 	public List<Customer> getCustomerByEmail(String email){
 		List<String> customerIDList = redisDao.getCustomerIdsbyEmail(email);
@@ -150,11 +175,25 @@ public class BankService {
 		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix " + key_suffix);
 		BankGenerator.Timer custTimer = new BankGenerator.Timer();
 		List<Account> accounts = null;
+		List<Email> emails = null;
+		List<PhoneNumber> phoneNumbers = null;
 		CompletableFuture<Integer> account_cntr = null;
 		CompletableFuture<Integer> customer_cntr = null;
+		CompletableFuture<Integer> email_cntr = null;
+		CompletableFuture<Integer> phone_cntr = null;
 		int totalAccounts = 0;
+		int totalEmails = 0;
+		int totalPhone = 0;
 		for (int i=0; i < noOfCustomers; i++){
 			Customer customer = BankGenerator.createRandomCustomer(key_suffix);
+			for (PhoneNumber phoneNumber : phoneNumbers = customer.getCustomerPhones()) {
+				phone_cntr = asyncService.writePhone(phoneNumber);
+			}
+			totalPhone = totalPhone + phoneNumbers.size();
+			for (Email email: emails = customer.getCustomerEmails()) {
+				email_cntr = asyncService.writeEmail(email);
+			}
+			totalEmails = totalEmails + emails.size();
 			accounts = BankGenerator.createRandomAccountsForCustomer(customer, key_suffix);
 			totalAccounts = totalAccounts + accounts.size();
 			for (Account account: accounts) {
@@ -165,9 +204,12 @@ public class BankService {
 
 		account_cntr.get();
 		customer_cntr.get();
+		email_cntr.get();
+		phone_cntr.get();
 		custTimer.end();
-		logger.info(noOfCustomers + " Customers and " + totalAccounts +  " Accounts created in "
-				+ custTimer.getTimeTakenSeconds() + " secs");
+		logger.info("Customers=" + noOfCustomers + " Accounts=" + totalAccounts +
+				" Emails=" + totalEmails + " Phones=" + totalPhone + " in " +
+				   custTimer.getTimeTakenSeconds() + " secs");
 		return accounts;
 	}
 

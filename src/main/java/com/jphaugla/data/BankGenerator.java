@@ -38,39 +38,39 @@ public class BankGenerator {
 		String customerId = customerIdInt + key_suffix;
 
 		Customer customer = new Customer();
-		customer.setCustomer_id(customerId);
+		customer.setCustomerId(customerId);
 
-		customer.setAddress_line1("Line1-" + customerId);
-		customer.setCreated_by("Java Test");
-        customer.setLast_updated_by("Java Test");
-        customer.setCustomer_type("Retail");
+		customer.setAddressLine1("Line1-" + customerId);
+		customer.setCreatedBy("Java Test");
+        customer.setLastUpdatedBy("Java Test");
+        customer.setCustomerType("Retail");
 
-		customer.setCreated_datetime(currentDate);
-		customer.setLast_updated(currentDate);
+		customer.setCreatedDatetime(currentDate);
+		customer.setLastUpdated(currentDate);
 
-		customer.setCustomer_origin_system("RCIF");
-		customer.setCustomer_status("A");
-		customer.setCountry_code("00");
-        customer.setGovernment_id("TIN");
-        customer.setGovernment_id_type(customerIdInt.substring(1));
+		customer.setCustomerOriginSystem("RCIF");
+		customer.setCustomerStatus("A");
+		customer.setCountryCode("00");
+        customer.setGovernmentId("TIN");
+        customer.setGovernmentIdType(customerIdInt.substring(1));
 
 		int lastDigit = Integer.parseInt(customerIdInt.substring(6));
 		if (lastDigit>7) {
-			customer.setAddress_line2("Apt " + customerId);
-			customer.setAddress_type("Apartment");
-			customer.setBill_pay_enrolled("false");
+			customer.setAddressLine2("Apt " + customerId);
+			customer.setAddressType("Apartment");
+			customer.setBillPayEnrolled("false");
 		}
 		else if (lastDigit==3){
-			customer.setBill_pay_enrolled("false");
-			customer.setAddress_type("Mobile");
+			customer.setBillPayEnrolled("false");
+			customer.setAddressType("Mobile");
 		}
 		else {
-			customer.setAddress_type("Residence");
-			customer.setBill_pay_enrolled("true");
+			customer.setAddressType("Residence");
+			customer.setBillPayEnrolled("true");
 		}
 		customer.setCity(locations.get(lastDigit));
-		customer.setState_abbreviation(States.get(lastDigit));
-		customer.setDate_of_birth(dob.get(lastDigit));
+		customer.setStateAbbreviation(States.get(lastDigit));
+		customer.setDateOfBirth(dob.get(lastDigit));
 		String lastName = customerId.substring(2,7);
 		String firstName = firstList.get(lastDigit);
 		String middleName = middleList.get(lastDigit);
@@ -84,20 +84,26 @@ public class BankGenerator {
 		String zipChar = zipcodeList.get(lastDigit).toString();
 		customer.setZipcode(zipChar);
 		customer.setZipcode4(zipChar + "-1234");
-		customer.setFirst_name(firstName);
-		customer.setLast_name(lastName);
-		customer.setMiddle_name(middleName);
-		customer.setFull_name(firstName + " " + middleName + " " + lastName);
-		Email home_email = new Email(customerId + "@gmail.com","home");
-		customer.setHome_email(home_email);
-		Email work_email = new Email(customerId + "@BigCompany.com","work");
-		customer.setWork_email(work_email);
-		PhoneNumber home_phone = new PhoneNumber(customerId + "h", "home");
-		customer.setHome_phone(home_phone);
-		PhoneNumber cell_phone = new PhoneNumber(customerId + "c", "cell");
-		customer.setCell_phone(cell_phone);
-		PhoneNumber work_phone = new PhoneNumber(customerId + "w", "work");
-		customer.setWork_phone(work_phone);
+		customer.setFirstName(firstName);
+		customer.setLastName(lastName);
+		customer.setMiddleName(middleName);
+		customer.setFullName(firstName + " " + middleName + " " + lastName);
+		/* customer.setHomeEmail(customerId + "@gmail.com");
+		customer.setWorkEmail(customerId + "@BigCompany.com");
+		customer.setHomePhone(customerId + "h");
+		customer.setCellPhone(customerId + "c");
+		customer.setWorkPhone(customerId + "w");
+		 */
+		Email home_email = new Email(customerId + "@gmail.com","home", customerId);
+		customer.setHomeEmail(home_email);
+		Email work_email = new Email(customerId + "@BigCompany.com","work", customerId);
+		customer.setWorkEmail(work_email);
+		PhoneNumber home_phone = new PhoneNumber(customerId + "h", "home", customerId);
+		customer.setHomePhone(home_phone);
+		PhoneNumber cell_phone = new PhoneNumber(customerId + "c", "cell", customerId);
+		customer.setCellPhone(cell_phone);
+		PhoneNumber workPhone = new PhoneNumber(customerId + "w", "work", customerId);
+		customer.setWorkPhone(workPhone);
 		return customer;
 	}
 
@@ -111,20 +117,20 @@ public class BankGenerator {
 			
 			Account account = new Account();
 			String accountNumber = "Acct" + Integer.toString(i) + key_suffix;
-			account.setCustomer_id(customer.getCustomer_id());
-			account.setAccount_no(accountNumber);
-			account.setAccount_type(accountTypes.get(i));
-			account.setAccount_status("Open");
-            account.setLast_updated_by("Java Test");
-            account.setLast_updated(currentDate);
-            account.setCreated_date(currentDate);
-            account.setCreated_by("Java Test");
+			account.setCustomerId(customer.getCustomerId());
+			account.setAccountNo(accountNumber);
+			account.setAccountType(accountTypes.get(i));
+			account.setAccountStatus("Open");
+            account.setLastUpdatedBy("Java Test");
+            account.setLastUpdated(currentDate);
+            account.setCreatedDate(currentDate);
+            account.setCreatedBy("Java Test");
 
 
 			accounts.add(account);
 			
 			//Keep a list of all Account Nos to create the transactions
-			accountIds.add(account.getAccount_no());
+			accountIds.add(account.getAccountNo());
 		}
 		
 		return accounts;
@@ -157,17 +163,17 @@ public class BankGenerator {
 
 		Transaction transaction = new Transaction();
 		createItemsAndAmount(noOfItems, transaction);
-		transaction.setAccount_no(account.getAccount_no());
+		transaction.setAccountNo(account.getAccountNo());
 		String tran_id = idx.toString() + key_suffix;
 		transaction.setTranId(tran_id);
         transaction.setCardNum( UUID.randomUUID().toString().replace('-','x'));
 		transaction.setTimestamp(aNewDate);
 		transaction.setLocation(location);
 		if(randomLocation<5) {
-            transaction.setAmount_type("Debit");
+            transaction.setAmountType("Debit");
         }
         else{
-            transaction.setAmount_type("Credit");
+            transaction.setAmountType("Credit");
         }
 		
         transaction.setMerchantCtygCd(merchantCtygCd);
@@ -181,7 +187,7 @@ public class BankGenerator {
         transaction.setTranDescription("this is the transaction description");
         transaction.setTranExpDt(aNewDate);
         transaction.setTranStat("OK");
-        transaction.setTranType("TranTyp1");
+        transaction.setTranType("Pending");
         transaction.setTransRsnCd("transRsnCd1");
         transaction.setTransRsnDesc("transRsnDesc");
         transaction.setTransRsnType("transRsnType");
@@ -190,7 +196,52 @@ public class BankGenerator {
         transaction.setTransRespType("transRespType");
         return transaction;
 	}
-	
+/*
+    public static List<PhoneNumber> createPhoneNumbers (Customer customer) {
+		List<PhoneNumber> phoneList = new ArrayList<PhoneNumber>();
+		PhoneNumber phone = null;
+		if(customer.getCellPhone() != null) {
+			phone = new PhoneNumber(customer.getCellPhone(),"cell", customer.getCustomerId());
+			phoneList.add(phone);
+		}
+		if(customer.getWorkPhone() != null) {
+			phone = new PhoneNumber(customer.getWorkPhone(),"work", customer.getCustomerId());
+			phoneList.add(phone);
+		}
+		if(customer.getHomePhone() != null) {
+			phone = new PhoneNumber(customer.getHomePhone(),"home", customer.getCustomerId());
+			phoneList.add(phone);
+		}
+		if(customer.getCustomPhone() != null) {
+			phone = new PhoneNumber(customer.getCustomPhone(), customer.getCustomLabel(), customer.getCustomerId());
+			phoneList.add(phone);
+		}
+		return phoneList;
+	}
+
+	public static List<Email> createEmails (Customer customer) {
+		List<Email> emailList = new ArrayList<Email>();
+		Email email = null;
+		if(customer.getHomeEmail() != null) {
+			email = new Email(customer.getHomeEmail(),"Home", customer.getCustomerId());
+			emailList.add(email);
+		}
+		if(customer.getWorkEmail() != null) {
+			email = new Email(customer.getWorkEmail(),"Work", customer.getCustomerId());
+			emailList.add(email);
+		}
+		if(customer.getCustomEmail1() != null) {
+			email = new Email(customer.getCustomEmail1(), "Custom1", customer.getCustomerId());
+			emailList.add(email);
+		}
+		if(customer.getCustomEmail2() != null) {
+			email = new Email(customer.getCustomEmail2(), "Custom2", customer.getCustomerId());
+			emailList.add(email);
+		}
+		return emailList;
+	}
+*/
+
 	/**
 	 * Creates a random transaction with some skew for some accounts.
 	 * @return

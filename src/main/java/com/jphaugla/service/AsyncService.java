@@ -1,13 +1,9 @@
 package com.jphaugla.service;
 
-import com.jphaugla.domain.Account;
-import com.jphaugla.domain.Customer;
-import com.jphaugla.domain.Transaction;
-import com.jphaugla.repository.TransactionRepository;
+import com.jphaugla.domain.*;
+import com.jphaugla.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import com.jphaugla.repository.CustomerRepository;
-import com.jphaugla.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +20,10 @@ public class AsyncService {
     private CustomerRepository customerRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private PhoneRepository phoneRepository;
+    @Autowired
+    private EmailRepository emailRepository;
 
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<Integer> writeAllTransaction(List<Transaction> transactions) {
@@ -53,6 +53,18 @@ public class AsyncService {
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<Integer> writeCustomer(Customer customer) {
         customerRepository.save(customer);
+        return CompletableFuture.completedFuture(0);
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public CompletableFuture<Integer> writePhone(PhoneNumber phoneNumber) {
+        phoneRepository.save(phoneNumber);
+        return CompletableFuture.completedFuture(0);
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public CompletableFuture<Integer> writeEmail(Email email) {
+        emailRepository.save(email);
         return CompletableFuture.completedFuture(0);
     }
 }

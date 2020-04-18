@@ -18,7 +18,8 @@ In this tutorial, a java spring boot application is run through a jar file to su
 [spring data for redis github](https://github.com/spring-projects/spring-data-examples/tree/master/redis/repositories)
 [spring data for redis sample code](https://www.oodlestechnologies.com/blogs/Using-Redis-with-CrudRepository-in-Spring-Boot/)
 [lettuce tips redis spring boot] (https://www.bytepitch.com/blog/redis-integration-spring-boot/)
-
+[spring data Reference in domain](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/main/java/example/springdata/redis/repositories/Person.java)
+[spring data referencee test code}(https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/test/java/example/springdata/redis/repositories/PersonRepositoryTests.java)
 ## Getting Started
 1. Prepare Docker environment-see the Prerequisites section above...
 2. Pull this github into a directory
