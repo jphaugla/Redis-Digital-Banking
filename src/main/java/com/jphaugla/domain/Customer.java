@@ -72,16 +72,4 @@ public class Customer {
         return phones;
     }
 
-    /*
-    private  String homeEmail;
-    private  String workEmail;
-    private  String customEmail1;
-    private  String customEmail2;
-    private  String homePhone;
-    private  String workPhone;
-    private  String cellPhone;
-    private  String customPhone;
-    private String customLabel;
-     */
-
 }

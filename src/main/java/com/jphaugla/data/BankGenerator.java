@@ -88,12 +88,7 @@ public class BankGenerator {
 		customer.setLastName(lastName);
 		customer.setMiddleName(middleName);
 		customer.setFullName(firstName + " " + middleName + " " + lastName);
-		/* customer.setHomeEmail(customerId + "@gmail.com");
-		customer.setWorkEmail(customerId + "@BigCompany.com");
-		customer.setHomePhone(customerId + "h");
-		customer.setCellPhone(customerId + "c");
-		customer.setWorkPhone(customerId + "w");
-		 */
+
 		Email home_email = new Email(customerId + "@gmail.com","home", customerId);
 		customer.setHomeEmail(home_email);
 		Email work_email = new Email(customerId + "@BigCompany.com","work", customerId);

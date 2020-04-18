@@ -45,6 +45,9 @@ public class BankingController {
 		Email home_email = new Email("jasonhaugland@gmail.com", "home", cust);
 		Email work_email = new Email("jason.haugland@redislabs.com", "work", cust);
 		PhoneNumber cell_phone = new PhoneNumber("612-408-4394", "cell", cust);
+		emailRepository.save(home_email);
+		emailRepository.save(work_email);
+		phoneRepository.save(cell_phone);
 		Customer customer = new Customer( cust, "4744 17th av s", "",
 				"Home", "N", "Minneapolis", "00",
 				"jph", create_date, "IDR",
