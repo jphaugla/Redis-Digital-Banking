@@ -1,16 +1,13 @@
 package com.jphaugla.controller;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import com.jphaugla.domain.*;
-
-import com.jphaugla.repository.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,80 +22,29 @@ import com.jphaugla.service.BankService;
 public class BankingController {
 
 	@Autowired
-	private AccountRepository accountRepository;
-	@Autowired
-	private CustomerRepository customerRepository;
-	@Autowired
-	private TransactionRepository transactionRepository;
-	@Autowired
-	private EmailRepository emailRepository;
-	@Autowired
-	private PhoneRepository phoneRepository;
-	@Autowired
-	private MerchantRepository merchantRepository;
-	@Autowired
-	private TransactionReturnRepository transactionReturnRepository;
-	@Autowired
 	private BankService bankService = BankService.getInstance();
 
 	private static final Logger logger = LoggerFactory.getLogger(BankingController.class);
 	// customer
 	@RequestMapping("/save_customer")
 	public String saveCustomer() throws ParseException {
-		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
-		Date last_update = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.29");
-		String cust = "cust0001";
-		Email home_email = new Email("jasonhaugland@gmail.com", "home", cust);
-		Email work_email = new Email("jason.haugland@redislabs.com", "work", cust);
-		PhoneNumber cell_phone = new PhoneNumber("612-408-4394", "cell", cust);
-		emailRepository.save(home_email);
-		emailRepository.save(work_email);
-		phoneRepository.save(cell_phone);
-		Customer customer = new Customer( cust, "4744 17th av s", "",
-				"Home", "N", "Minneapolis", "00",
-				"jph", create_date, "IDR",
-				"A", "BANK", "1949.01.23",
-				"Ralph", "Ralph Waldo Emerson", "M",
-				"887778989", "SSN", "Emerson", last_update,
-				"jph", "Waldo",  "MR",
-				"help", "MN", "55444", "55444-3322",
-				home_email, work_email,
-				null, null, null, null,
-			    cell_phone,null
-				);
-		customerRepository.save(customer);
+		bankService.saveSampleCustomer();
 		return "Done";
 	}
 	//  account
 	@RequestMapping("/save_account")
 	public String saveAccount() throws ParseException {
-		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2010.03.28");
-		Account account = new Account("cust001", "acct001",
-				"credit", "teller", "active",
-				"ccnumber666655", create_date,
-				null, null, null,null);
-		accountRepository.save(account);
+		bankService.saveSampleAccount();
 		return "Done";
 	}
+
 	//  transaction
 	@RequestMapping("/save_transaction")
 	public String saveTransaction() throws ParseException {
-		Date settle_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
-		Date post_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
-		Date init_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.27");
-
-		Merchant merchant = new Merchant("Cub Foods", "5411",
-				"Grocery Stores", "MN", "US");
-		merchantRepository.save(merchant);
-
-		Transaction transaction = new Transaction("1234", "acct01",
-				"Debit", merchant.getName(), "referenceKeyType",
-				"referenceKeyValue", 323.23,  323.22, "1631",
-				"Test Transaction", init_date, settle_date, post_date,
-				"POSTED", null, "ATM665");
-		transactionRepository.save(transaction);
+		bankService.saveSampleTransaction();
 		return "Done";
 	}
+
 	@GetMapping("/generateData")
 	@ResponseBody
 	public String generateData (@RequestParam Integer noOfCustomers, @RequestParam Integer noOfTransactions,
@@ -145,4 +91,26 @@ public class BankingController {
 				" from=" + startDate + " to=" + endDate);
 		return bankService.getMerchantTransactions(merchant, account, startDate, endDate);
 	}
+
+	@GetMapping("/creditCardTransactions")
+
+	public List<Transaction> getCreditCardTransactions
+			(@RequestParam String creditCard,
+			 @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+			 @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate)
+			throws ParseException {
+		logger.debug("getCreditCardTransactions creditCard=" + creditCard +
+				" startDate=" + startDate + " endDate=" + endDate);
+		List<Transaction> transactions = new ArrayList<>();
+		transactions = bankService.getCreditCardTransactions(creditCard, startDate, endDate);
+		return transactions;
+	}
+	@GetMapping("/returned_transactions")
+
+	public List<Transaction> getReturnedTransaction () {
+		List<Transaction> transactions = new ArrayList<>();
+		transactions = bankService.getTransactionReturns();
+		return transactions;
+	}
+
 }

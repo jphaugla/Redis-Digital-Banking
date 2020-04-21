@@ -19,8 +19,7 @@ public interface TransactionRepository extends CrudRepository<Transaction, Strin
 	List<Transaction> findByMerchantAndAccountNoAndPostingDateBetween(String merchant,
 																	  String accountNo, Date startDate, Date endDate);
 
-
-	List<Transaction> findByRole_RoleName(String roleName);
+	List<Transaction> findByTransactionReturn(String transactionReturn);
 
 
 }

@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface AccountRepository extends CrudRepository<Account, String> {
 
-	List<Account> getAccounts(String customer_id);
+	List<Account> getAccountsByCardNum(String creditCard);
 
 }

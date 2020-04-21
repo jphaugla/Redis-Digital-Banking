@@ -1,6 +1,7 @@
 package com.jphaugla.service;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -13,11 +14,11 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+
 
 
 @Service
@@ -29,6 +30,8 @@ public class BankService {
 	private AsyncService asyncService;
 	@Autowired
 	private CustomerRepository customerRepository;
+	@Autowired
+	private AccountRepository accountRepository;
 	@Autowired
 	private PhoneRepository phoneRepository;
 	@Autowired
@@ -102,9 +105,7 @@ public class BankService {
 		logger.info("merchant is " + in_merchant + " and account is " + account);
 		List <String> transactionIDs = new ArrayList<>();
 		List <Transaction> transactions = new ArrayList<>();
-		// Optional<Merchant> merchant = merchantRepository.findById(in_merchant);
-		// List<Transaction> transactions = transactionRepository.findByMerchantAndAccountNoAndPostingDateBetween
-				// (in_merchant, account, startDate, endDate);
+
 		String merchantKey = "Transaction:merchant:" + in_merchant;
 		String accountKey = "Transaction:accountNo:" + account;
 		String tempkey = "Tempkey:" + in_merchant + ":" + account;
@@ -116,26 +117,98 @@ public class BankService {
 		if (redisTemplate.hasKey(accountKey)) {
 			logger.info("found the account");
 		}
-		if (redisTemplate.hasKey("Transaction:1425J:idx")) {
-			logger.info("found trans 1425J");
-		}
+
 		redisTemplate.opsForSet().intersectAndStore(accountKey, merchantKey,ztempkey);
 		Set resultSet = redisTemplate.opsForSet().intersect(ztempkey,
 					redisTemplate.opsForZSet().range("Trans:PostDate",startDate.getTime(),endDate.getTime()));
 		transactionIDs.addAll(resultSet);
 		logger.info("result set returned:", resultSet.size());
-		// redisTemplate.opsForSet().intersectAndStore(silly,tempkey,ztempkey);
-		// transactionIDs.addAll(redisTemplate.opsForSet().members(ztempkey));
 		transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
 		return transactions;
 	};
-/*
-	public List<Transaction> getCreditCardTransactions(String creditCard, String account, String to, String from) throws ParseException {
-		List<String> transactionKey = redisDao.getCreditCardTransactions(creditCard, account, to, from);
-		return dao.getTransactionsfromDelimitedKey(transactionKey);
+
+	public List<Transaction> getCreditCardTransactions(String creditCard, Date startDate, Date endDate)
+			throws ParseException {
+		logger.info("credit card is " + creditCard + " start is " + startDate + " end is " + endDate);
+		List <String> transactionIDs = new ArrayList<>();
+		List <Transaction> transactions = new ArrayList<>();
+		List<Account> accounts = accountRepository.getAccountsByCardNum(creditCard);
+		if(accounts.size() > 0) {
+
+			if (accounts.size() != 1) {
+				logger.info("Should not be same card for multiple account card=" + creditCard);
+				for (Account account : accounts) {
+					logger.info("Account is" + account.getAccountNo());
+				}
+			}
+			String accountKey = "Transaction:accountNo:" + accounts.get(0);
+			Set resultSet = redisTemplate.opsForSet().intersect(accountKey,
+					redisTemplate.opsForZSet().range("Trans:PostDate", startDate.getTime(), endDate.getTime()));
+			transactionIDs.addAll(resultSet);
+			logger.info("result set returned:", resultSet.size());
+			transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
+		}
+		return transactions;
+
 	};
 
+	public List<Transaction> getTransactionReturns() {
+		List <Transaction> transactions = new ArrayList<>();
+		List <TransactionReturn> transactionReturns = new ArrayList<>();
+		for (TransactionReturn transactionReturn : transactionReturns = (List<TransactionReturn>) transactionReturnRepository.findAll()) {
+			transactions.addAll(transactionRepository.findByTransactionReturn(transactionReturn.getReasonCode()));
+		}
+		return transactions;
+	}
+	public void saveSampleCustomer() throws ParseException {
+		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
+		Date last_update = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.29");
+		String cust = "cust0001";
+		Email home_email = new Email("jasonhaugland@gmail.com", "home", cust);
+		Email work_email = new Email("jason.haugland@redislabs.com", "work", cust);
+		PhoneNumber cell_phone = new PhoneNumber("612-408-4394", "cell", cust);
+		emailRepository.save(home_email);
+		emailRepository.save(work_email);
+		phoneRepository.save(cell_phone);
+		Customer customer = new Customer( cust, "4744 17th av s", "",
+				"Home", "N", "Minneapolis", "00",
+				"jph", create_date, "IDR",
+				"A", "BANK", "1949.01.23",
+				"Ralph", "Ralph Waldo Emerson", "M",
+				"887778989", "SSN", "Emerson", last_update,
+				"jph", "Waldo",  "MR",
+				"help", "MN", "55444", "55444-3322",
+				home_email, work_email,
+				null, null, null, null,
+				cell_phone,null
+		);
+		customerRepository.save(customer);
+	}
+	public void saveSampleAccount() throws ParseException {
+		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2010.03.28");
+		Account account = new Account("cust001", "acct001",
+				"credit", "teller", "active",
+				"ccnumber666655", create_date,
+				null, null, null, null);
+		accountRepository.save(account);
+	}
+	public void saveSampleTransaction() throws ParseException {
+		Date settle_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
+		Date post_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
+		Date init_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.27");
 
+		Merchant merchant = new Merchant("Cub Foods", "5411",
+				"Grocery Stores", "MN", "US");
+		merchantRepository.save(merchant);
+
+		Transaction transaction = new Transaction("1234", "acct01",
+				"Debit", merchant.getName(), "referenceKeyType",
+				"referenceKeyValue", 323.23,  323.22, "1631",
+				"Test Transaction", init_date, settle_date, post_date,
+				"POSTED", null, "ATM665");
+		transactionRepository.save(transaction);
+	}
+/*
 	public List<Customer> getCustomerByEmail(String email){
 		List<String> customerIDList = redisDao.getCustomerIdsbyEmail(email);
 		return dao.getCustomerListFromIDs(customerIDList);
@@ -156,14 +229,6 @@ public class BankService {
 
 		return dao.getTransactions(accountId);
 	}
-	public List<Transaction> getTransactionsForCCNoDateSolr(String ccNo, Set<String> tags, DateTime from, DateTime to) {
-
-		List<Transaction> transactions;
-
-		transactions = dao.getTransactionsForCCNoDateSolr(ccNo, tags, from, to);
-
-		return transactions;
-	}
 
 	public void addTag(String accountNo, String trandate, String transactionID, String tag, String operation) throws ParseException {
 		List<String> transactionKey = redisDao.addTag(accountNo, trandate, transactionID, tag, operation);
@@ -173,10 +238,6 @@ public class BankService {
 		for( Transaction trans:transactions) {
 			dao.addTagPreparedNoWork(accountNo, trans.getTransactionTime(), transactionInt, tagSet);
 		}
-	}
-
-	public void addCustChange(String accountNo,String custid, String chgdate) {
-		dao.addCustChange(accountNo,custid,chgdate);
 	}
 
 	public List<Transaction> getTransactionsCTGDESC(String mrchntctgdesc) {
