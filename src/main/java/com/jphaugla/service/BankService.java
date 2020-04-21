@@ -82,6 +82,36 @@ public class BankService {
 
 		if ((returnCustomer != null) && (returnCustomer.isPresent())) {
 			returnCust = returnCustomer.get();
+			// logger.info("customer is " + returnCust);
+
+		} else {
+			returnCust = null;
+		}
+		return returnCust;
+	}
+
+	public Optional<Email> getEmail(String email) {
+		return emailRepository.findById(email);
+	}
+
+	public Customer getCustomerByEmail(String emailString) {
+		// get list of customers having this email number
+		//  first, get email hash with this email number
+		//   next, get the customer id with this email number
+		//   third, use the customer id to get the customer
+		Optional<Email> optionalEmail = getEmail(emailString);
+		Optional<Customer> returnCustomer = null;
+		Customer returnCust = null;
+		logger.info("in bankservice.getCustomerByEmail optEmail is" + optionalEmail.isPresent());
+		if (optionalEmail.isPresent()) {
+			Email oneEmail = optionalEmail.get();
+			String customerId = oneEmail.getCustomerId();
+			// logger.info("customer is " + customerId);
+			returnCustomer = customerRepository.findById(customerId);
+		}
+
+		if ((returnCustomer != null) && (returnCustomer.isPresent())) {
+			returnCust = returnCustomer.get();
 			logger.info("customer is " + returnCust);
 
 		} else {
@@ -126,11 +156,34 @@ public class BankService {
 		transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
 		return transactions;
 	};
+	public List<Transaction> getAccountTransactions(String account, Date startDate, Date endDate)
+			throws ParseException {
+		logger.info("account is " + account);
+		List <Transaction> transactions = new ArrayList<>();
+
+		String accountKey = "Transaction:accountNo:" + account;
+		logger.info("accountKey is " + accountKey );
+		if (redisTemplate.hasKey(accountKey)) {
+			logger.info("found the account");
+			transactions = getAccountsByDateRange(accountKey, startDate, endDate);
+		}
+		return transactions;
+	};
+	private List<Transaction> getAccountsByDateRange(String accountKey, Date startDate, Date endDate) {
+		List <String> transactionIDs = new ArrayList<>();
+		List <Transaction> transactions = new ArrayList<>();
+		Set resultSet = redisTemplate.opsForSet().intersect(accountKey,
+				redisTemplate.opsForZSet().range("Trans:PostDate", startDate.getTime(), endDate.getTime()));
+		transactionIDs.addAll(resultSet);
+		logger.info("result set returned:", resultSet.size());
+		transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
+		return transactions;
+	}
 
 	public List<Transaction> getCreditCardTransactions(String creditCard, Date startDate, Date endDate)
 			throws ParseException {
 		logger.info("credit card is " + creditCard + " start is " + startDate + " end is " + endDate);
-		List <String> transactionIDs = new ArrayList<>();
+		//  get the account for this credit card
 		List <Transaction> transactions = new ArrayList<>();
 		List<Account> accounts = accountRepository.getAccountsByCardNum(creditCard);
 		if(accounts.size() > 0) {
@@ -142,11 +195,7 @@ public class BankService {
 				}
 			}
 			String accountKey = "Transaction:accountNo:" + accounts.get(0);
-			Set resultSet = redisTemplate.opsForSet().intersect(accountKey,
-					redisTemplate.opsForZSet().range("Trans:PostDate", startDate.getTime(), endDate.getTime()));
-			transactionIDs.addAll(resultSet);
-			logger.info("result set returned:", resultSet.size());
-			transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
+			transactions = getAccountsByDateRange( accountKey, startDate, endDate);
 		}
 		return transactions;
 
@@ -209,20 +258,6 @@ public class BankService {
 		transactionRepository.save(transaction);
 	}
 /*
-	public List<Customer> getCustomerByEmail(String email){
-		List<String> customerIDList = redisDao.getCustomerIdsbyEmail(email);
-		return dao.getCustomerListFromIDs(customerIDList);
-	}
-
-	public List<Customer> getCustomerByFullNamePhone(String fullName, String phoneString){
-		List<String> customerIDList = redisDao.getCustomerByFullNamePhone(fullName, phoneString);
-		return dao.getCustomerListFromIDs(customerIDList);
-	}
-		
-	public List<Account> getAccounts(String customerId){
-		
-		return dao.getCustomerAccounts(customerId);
-	}
 
 	public List<Transaction> getTransactions(String accountId) {
 
@@ -243,11 +278,6 @@ public class BankService {
 	public List<Transaction> getTransactionsCTGDESC(String mrchntctgdesc) {
 		return dao.getTransactionsCTGDESC(mrchntctgdesc);
 	}
-	public Map<String, Object> getIndexInfo( String indexName) throws redis.clients.jedis.exceptions.JedisDataException {
-		logger.debug("In get indexInfo with indexName as " + indexName);
-		return redisDao.indexInfo(indexName);
-	}
-
 	 */
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,

@@ -68,6 +68,14 @@ public class BankingController {
 		return bankService.getCustomerByPhone(phoneString);
 	}
 
+	@GetMapping("/customerByEmail")
+
+	public Customer getCustomerByEmail(@RequestParam String email) {
+		logger.debug("IN get customerByEmail, email is " + email);
+		return bankService.getCustomerByEmail(email);
+	}
+
+
 	@GetMapping("/customerByStateCity")
 
 	public List<Customer> getCustomerByStateCity(@RequestParam String state, @RequestParam String city) {
@@ -103,6 +111,20 @@ public class BankingController {
 				" startDate=" + startDate + " endDate=" + endDate);
 		List<Transaction> transactions = new ArrayList<>();
 		transactions = bankService.getCreditCardTransactions(creditCard, startDate, endDate);
+		return transactions;
+	}
+
+	@GetMapping("/accountTransactions")
+
+	public List<Transaction> getAccountTransactions
+			(@RequestParam String accountNo,
+			 @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+			 @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate)
+			throws ParseException {
+		logger.debug("getCreditCardTransactions creditCard=" + accountNo +
+				" startDate=" + startDate + " endDate=" + endDate);
+		List<Transaction> transactions = new ArrayList<>();
+		transactions = bankService.getAccountTransactions(accountNo, startDate, endDate);
 		return transactions;
 	}
 	@GetMapping("/returned_transactions")
