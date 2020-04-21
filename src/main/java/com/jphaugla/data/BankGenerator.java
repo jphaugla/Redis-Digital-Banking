@@ -69,13 +69,13 @@ public class BankGenerator {
 			customer.setBillPayEnrolled("true");
 		}
 		customer.setCity(locations.get(lastDigit));
-		customer.setStateAbbreviation(States.get(lastDigit));
+		customer.setStateAbbreviation(States[lastDigit]);
 		customer.setDateOfBirth(dob.get(lastDigit));
 		String lastName = customerId.substring(2,7);
 		String firstName = firstList.get(lastDigit);
 		String middleName = middleList.get(lastDigit);
-		customer.setGender(genderList.get(lastDigit));
-		if (genderList.get(lastDigit)=="F"){
+		customer.setGender(genderList[lastDigit]);
+		if (genderList[lastDigit]=="F"){
 		    customer.setPrefix("Ms");
         }
         else {
@@ -101,6 +101,22 @@ public class BankGenerator {
 		customer.setWorkPhone(workPhone);
 		return customer;
 	}
+	public static List<Merchant> createMerchantList () {
+		List<Merchant> merchants = new ArrayList<>();
+		int iterations = issuers.length;
+		for (int i=0; i < iterations; i++) {
+			merchants.add(new Merchant(issuers[i], issuersCD[i], issuersCDdesc[i], States[i],"US"));
+		}
+        return merchants;
+	};
+
+	public static List<TransactionReturn> createTransactionReturnList() {
+		List<TransactionReturn> transactionReturns = new ArrayList<>();
+		transactionReturns.add(new TransactionReturn("1345","incorrect amount recorded"));
+		transactionReturns.add(new TransactionReturn("1554","not authorized transaction"));
+		transactionReturns.add(new TransactionReturn("6555","wrong account"));
+		return transactionReturns;
+	};
 
 	public static List<Account> createRandomAccountsForCustomer(Customer customer, String key_suffix) {
 		
@@ -112,6 +128,7 @@ public class BankGenerator {
 			
 			Account account = new Account();
 			String accountNumber = "Acct" + Integer.toString(i) + key_suffix;
+			account.setCardNum( UUID.randomUUID().toString().replace('-','x'));
 			account.setCustomerId(customer.getCustomerId());
 			account.setAccountNo(accountNumber);
 			account.setAccountType(accountTypes.get(i));
@@ -130,39 +147,50 @@ public class BankGenerator {
 		
 		return accounts;
 	}
-	public static Transaction createRandomTransaction(int noOfDays,  Integer idx, Account account, String key_suffix) {
+	public static Transaction createRandomTransaction(int noOfDays,  Integer idx, Account account,
+													  String key_suffix, List<Merchant> merchants,
+													  List<TransactionReturn> transactionReturns) {
 
 		int noOfMillis = noOfDays * DAY_MILLIS;
 		// create time by adding a random no of millis
 		DateTime newDate = date.plusMillis(new Double(Math.random() * noOfMillis).intValue() + 1);
 
-		return createRandomTransaction(newDate, idx, account, key_suffix);
+		return createRandomTransaction(newDate, idx, account, key_suffix, merchants, transactionReturns);
 	}
-	public static Transaction createRandomTransaction(DateTime newDate,
-													  Integer idx, Account account, String key_suffix) {
-
-
+	public static Transaction createRandomTransaction(DateTime newDate, Integer idx, Account account,
+													  String key_suffix,List<Merchant> merchants,
+													  List<TransactionReturn> transactionReturns) {
 
 		String location = locations.get(new Double(Math.random() * locations.size()).intValue());
 		int noOfItems = new Double(Math.ceil(Math.random() * 3)).intValue();
-		int randomLocation = new Double(Math.random() * issuers.size()).intValue();
-		String issuer = issuers.get(randomLocation);
-		String note = notes.get(randomLocation);
-		String tag = tagList.get(randomLocation);
-		String merchantCtygCd = issuersCD.get(randomLocation);
-        String merchantCtygDesc = issuersCDdesc.get(randomLocation);
-		Set<String> tags = new HashSet<String>();
-		tags.add(note);
-		tags.add(tag);
+		double doubleRandomLocation = new Double(Math.random() * issuers.length);
+		int randomLocation = (int) doubleRandomLocation;
+
 		Date aNewDate = newDate.toDate();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(aNewDate);
+		calendar.add(Calendar.DATE, -1);
+		Date date_minus_one =calendar.getTime();
+		calendar.add(Calendar.DATE, -1);
+		Date date_minus_two = calendar.getTime();
 
 		Transaction transaction = new Transaction();
 		createItemsAndAmount(noOfItems, transaction);
 		transaction.setAccountNo(account.getAccountNo());
 		String tran_id = idx.toString() + key_suffix;
 		transaction.setTranId(tran_id);
-        transaction.setCardNum( UUID.randomUUID().toString().replace('-','x'));
-		transaction.setTimestamp(aNewDate);
+        String transactionStat = transactionStatus[randomLocation];
+        transaction.setStatus(transactionStat);
+        if(transactionStat == "POSTED") {
+        	transaction.setPostingDate(aNewDate);
+        	transaction.setSettlementDate(date_minus_one);
+        	transaction.setInitialDate(date_minus_two);
+		} else if (transactionStat == "SETTLED") {
+			transaction.setSettlementDate(aNewDate);
+			transaction.setInitialDate(date_minus_one);
+		} else {
+			transaction.setInitialDate(aNewDate);
+		}
 		transaction.setLocation(location);
 		if(randomLocation<5) {
             transaction.setAmountType("Debit");
@@ -170,72 +198,20 @@ public class BankGenerator {
         else{
             transaction.setAmountType("Credit");
         }
-		
-        transaction.setMerchantCtygCd(merchantCtygCd);
-        transaction.setMerchantCtgyDesc(merchantCtygDesc);
-        transaction.setMerchantName(issuer);
+        transaction.setMerchant(merchants.get(randomLocation).getName());
 
         transaction.setReferenceKeyType("reftype");
         transaction.setReferenceKeyValue("thisRef");
 
-        transaction.setTranCd("tranCd1");
-        transaction.setTranDescription("this is the transaction description");
-        transaction.setTranExpDt(aNewDate);
-        transaction.setTranStat("OK");
-        transaction.setTranType("Pending");
-        transaction.setTransRsnCd("transRsnCd1");
-        transaction.setTransRsnDesc("transRsnDesc");
-        transaction.setTransRsnType("transRsnType");
-        transaction.setTransRespCd("transRespCd");
-        transaction.setTransRespDesc("transRespDesc");
-        transaction.setTransRespType("transRespType");
+        transaction.setTranCd(issuersCD[randomLocation]);
+        transaction.setDescription("description" + issuersCD[randomLocation] + genderList[randomLocation/3 + 1]);
+        if(randomLocation==8) {
+        	transaction.setTransactionReturn(transactionReturns.get(0).getReasonCode());
+		} else if (randomLocation == 13) {
+			transaction.setTransactionReturn(transactionReturns.get(1).getReasonCode());
+		}
         return transaction;
 	}
-/*
-    public static List<PhoneNumber> createPhoneNumbers (Customer customer) {
-		List<PhoneNumber> phoneList = new ArrayList<PhoneNumber>();
-		PhoneNumber phone = null;
-		if(customer.getCellPhone() != null) {
-			phone = new PhoneNumber(customer.getCellPhone(),"cell", customer.getCustomerId());
-			phoneList.add(phone);
-		}
-		if(customer.getWorkPhone() != null) {
-			phone = new PhoneNumber(customer.getWorkPhone(),"work", customer.getCustomerId());
-			phoneList.add(phone);
-		}
-		if(customer.getHomePhone() != null) {
-			phone = new PhoneNumber(customer.getHomePhone(),"home", customer.getCustomerId());
-			phoneList.add(phone);
-		}
-		if(customer.getCustomPhone() != null) {
-			phone = new PhoneNumber(customer.getCustomPhone(), customer.getCustomLabel(), customer.getCustomerId());
-			phoneList.add(phone);
-		}
-		return phoneList;
-	}
-
-	public static List<Email> createEmails (Customer customer) {
-		List<Email> emailList = new ArrayList<Email>();
-		Email email = null;
-		if(customer.getHomeEmail() != null) {
-			email = new Email(customer.getHomeEmail(),"Home", customer.getCustomerId());
-			emailList.add(email);
-		}
-		if(customer.getWorkEmail() != null) {
-			email = new Email(customer.getWorkEmail(),"Work", customer.getCustomerId());
-			emailList.add(email);
-		}
-		if(customer.getCustomEmail1() != null) {
-			email = new Email(customer.getCustomEmail1(), "Custom1", customer.getCustomerId());
-			emailList.add(email);
-		}
-		if(customer.getCustomEmail2() != null) {
-			email = new Email(customer.getCustomEmail2(), "Custom2", customer.getCustomerId());
-			emailList.add(email);
-		}
-		return emailList;
-	}
-*/
 
 	/**
 	 * Creates a random transaction with some skew for some accounts.
@@ -254,8 +230,7 @@ public class BankGenerator {
 			totalAmount += amount;
 		}
 		transaction.setAmount(totalAmount);
-        transaction.setOrigTranAmt(totalAmount);
-        transaction.setAmount(totalAmount);
+        transaction.setOriginalAmount(totalAmount);
 	}
 
 
@@ -295,12 +270,15 @@ public class BankGenerator {
             55802, 61704, 55435, 61101, 16821);
 	public static List<String> dob = Arrays.asList("08/19/1964", "07/14/1984", "01/20/2000", "06/10/1951", "11/22/1995",
 			"12/13/1954", "08/12/1943", "11/29/1964", "02/01/1994", "07/12/1944");
+    public static String[] transactionStatus = {"POSTED", "AUTHORIZED", "SETTLED", "POSTED", "AUTHORIZED", "SETTLED",
+			"POSTED", "AUTHORIZED", "SETTLED", "POSTED", "AUTHORIZED", "SETTLED",
+			"POSTED", "AUTHORIZED", "POSTED", "AUTHORIZED", "POSTED", "AUTHORIZED",
+			"POSTED", "POSTED","POSTED","POSTED","POSTED","POSTED","POSTED","POSTED"};
+	public static String[] States = {"IL", "MN", "MN", "MN", "MN","CA", "AZ", "AL", "AK", "TX", "WY", "PR",
+			"MN", "IL", "MN", "MN", "IL", "IA", "WI", "SD", "ND", "MD", "CT", "WI", "KS", "IN","DE","TN"
+	 		};
 
-	public static List<String> States = Arrays.asList("IL", "MN", "MN", "MN", "MN",
-			"MN", "IL", "MN", "MN", "IL");
-
-    public static List<String> genderList = Arrays.asList("M", "F", "F", "M", "F",
-            "F", "M", "M", "M", "F");
+    public static String[] genderList = {"M", "F", "F", "M", "F", "F", "M", "M", "M", "F"};
 
     public static List<String> middleList = Arrays.asList("Paul", "Ann", "Mary", "Joseph", "Amy",
             "Elizabeth", "John", "Javier", "Golov", "Eliza");
@@ -308,19 +286,17 @@ public class BankGenerator {
     public static List<String> firstList = Arrays.asList("Jason", "Catherine", "Esmeralda", "Marcus", "Louisa",
             "Julia", "Miles", "Luis", "Igor", "Angela");
 
-	public static List<String> issuers = Arrays.asList("Tesco", "Sainsbury", "Wal-Mart Stores",
-            "Morrisons",
+	public static String[] issuers = {"Tesco", "Sainsbury", "Wal-Mart Stores", "Morrisons",
 			"Marks & Spencer", "Walmart", "John Lewis", "Cub Foods", "Argos", "Co-op", "Currys", "PC World", "B&Q",
 			"Somerfield", "Next", "Spar", "Amazon", "Costa", "Starbucks", "BestBuy", "Lowes", "BarnesNoble",
-            "Carlson Wagonlit Travel",
-			"Pizza Hut", "Local Pub");
+            "Carlson Wagonlit Travel", "Pizza Hut", "Local Pub"};
 
-    public static List<String> issuersCD = Arrays.asList("5411", "5411", "5310", "5499",
+    public static String[] issuersCD = {"5411", "5411", "5310", "5499",
             "5310", "5912", "5311", "5411", "5961", "5300", "5732", "5964", "5719",
             "5411", "5651", "5411", "5310", "5691", "5814", "5732", "5211", "5942", "5962",
-            "5814", "5813");
+            "5814", "5813"};
 
-    public static List<String> issuersCDdesc = Arrays.asList("Grocery Stores", "Grocery Stores",
+    public static String[] issuersCDdesc = {"Grocery Stores", "Grocery Stores",
             "Discount Stores", "Misc Food Stores Convenience Stores and Specialty Markets",
             "Discount Stores", "Drug Stores and Pharmacies", "Department Stores", "Supermarkets", "Mail Order Houses",
             "Wholesale Clubs", "Electronic Sales",
@@ -331,7 +307,8 @@ public class BankGenerator {
             "Electronic Sales",
             "Lumber and Building Materials Stores",
             "Book Stores", "Direct Marketing Travel Related Services",
-            "Fast Food Restaurants", "Drinking Places, Bars, Taverns, Cocktail lounges, Nightclubs and Discos");
+            "Fast Food Restaurants", "Drinking Places, Bars, Taverns, Cocktail lounges, Nightclubs and Discos"};
+
 
 	public static List<String> notes = Arrays.asList("Shopping", "Shopping", "Shopping", "Shopping", "Shopping",
 			"Pharmacy", "HouseHold", "Shopping", "Household", "Shopping", "Tech", "Tech", "Diy", "Shopping", "Clothes",

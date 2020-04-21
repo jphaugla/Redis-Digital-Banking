@@ -21,6 +21,7 @@ public class Account {
     private String accountType;
     private String accountOriginSystem;
     private @Indexed String accountStatus;
+    private @Indexed String cardNum;
     private Date openDate;
     private  Date lastUpdated;
     private  String lastUpdatedBy;

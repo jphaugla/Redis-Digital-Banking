@@ -1,2 +1,2 @@
 # get by phone and full name.  Notice the ascii string for the space
-curl -X GET -H "Content-Type: application/json"  'http://localhost:8080/customerByPhone/?phoneString=1000034c&full_name=Louisa%20Amy%2000304'
+curl -X GET -H "Content-Type: application/json"  'http://localhost:8080/customerByPhone/?phoneString=1000088Jw&full_name=Igor%20Golov%2000088'

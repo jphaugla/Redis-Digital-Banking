@@ -2,6 +2,7 @@ package com.jphaugla.domain;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
@@ -18,29 +19,20 @@ import java.util.Date;
 public class Transaction {
     private @Id String tranId;
     private @Indexed String accountNo;
-    private String accountType;
+    // debit or credit
     private String amountType;
-    private Double amount;
-    private String cardNum;
-    private String merchantCtygCd;
-    private String merchantCtgyDesc;
-    private String merchantName;
-    private Double origTranAmt;
+    private @Indexed String merchant;
     private String referenceKeyType;
     private String referenceKeyValue;
-    private Double tranAmt;
+    private Double originalAmount;
+    private Double amount;
     private String tranCd ;
-    private String tranDescription;
-    private Date tranExpDt;
-    private Date tranInitDt;
-    private Date timestamp;
-    private String tranStat   ;
-    private String tranType   ;
-    private String transRsnCd;
-    private String transRsnDesc;
-    private String transRsnType;
-    private String transRespCd ;
-    private String transRespDesc;
-    private String transRespType ;
+    private String description;
+    private Date initialDate;
+    private Date settlementDate;
+    private Date postingDate;
+    //  this is authorized, posted, settled
+    private String status   ;
+    private @Indexed String  transactionReturn;
     private String location;
 }

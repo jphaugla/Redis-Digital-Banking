@@ -2,6 +2,7 @@ package com.jphaugla.controller;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import com.jphaugla.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import com.jphaugla.service.BankService;
@@ -32,6 +34,10 @@ public class BankingController {
 	private EmailRepository emailRepository;
 	@Autowired
 	private PhoneRepository phoneRepository;
+	@Autowired
+	private MerchantRepository merchantRepository;
+	@Autowired
+	private TransactionReturnRepository transactionReturnRepository;
 	@Autowired
 	private BankService bankService = BankService.getInstance();
 
@@ -68,7 +74,8 @@ public class BankingController {
 	public String saveAccount() throws ParseException {
 		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2010.03.28");
 		Account account = new Account("cust001", "acct001",
-				"credit", "teller", "active", create_date,
+				"credit", "teller", "active",
+				"ccnumber666655", create_date,
 				null, null, null,null);
 		accountRepository.save(account);
 		return "Done";
@@ -76,19 +83,19 @@ public class BankingController {
 	//  transaction
 	@RequestMapping("/save_transaction")
 	public String saveTransaction() throws ParseException {
-		Date newDate = new Date ();
-		Date expire_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
+		Date settle_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
+		Date post_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
 		Date init_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.27");
+
+		Merchant merchant = new Merchant("Cub Foods", "5411",
+				"Grocery Stores", "MN", "US");
+		merchantRepository.save(merchant);
+
 		Transaction transaction = new Transaction("1234", "acct01",
-				"personal", "Debit", 400.23, "Silly",
-				"5411", "Grocery Stores",
-				"Cub Foods", 323.22, "referenceKeyType",
-				"referenceKeyValue", 323.22, "tranCd" ,
-				"Test Transaction", expire_date, init_date,
-				 newDate, "OK", "tranType", "transRsnCd",
-				"transRsnDesc", "transRsnType", "transRespCd" ,
-				"transRespDesc", "transRespType" ,
-				"Minneapolis");
+				"Debit", merchant.getName(), "referenceKeyType",
+				"referenceKeyValue", 323.23,  323.22, "1631",
+				"Test Transaction", init_date, settle_date, post_date,
+				"POSTED", null, "ATM665");
 		transactionRepository.save(transaction);
 		return "Done";
 	}
@@ -126,5 +133,16 @@ public class BankingController {
 	public List<Customer> getCustomerIdsbyZipcodeLastname(@RequestParam String zipcode, @RequestParam String lastname) {
 		logger.debug("IN get getCustomerIdsbyZipcodeLastname with zipcode as " + zipcode + " and lastname=" + lastname);
 		return bankService.getCustomerIdsbyZipcodeLastname(zipcode, lastname);
+	}
+	@GetMapping("/merchantTransactions")
+
+	public List<Transaction> getMerchantTransactions
+			(@RequestParam String merchant, @RequestParam String account,
+			 @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+			 @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate)
+				throws ParseException {
+		logger.debug("In getMerchantTransactions merchant=" + merchant + " account=" + account +
+				" from=" + startDate + " to=" + endDate);
+		return bankService.getMerchantTransactions(merchant, account, startDate, endDate);
 	}
 }

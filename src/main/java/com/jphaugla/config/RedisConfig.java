@@ -19,6 +19,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -27,6 +29,7 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableConfigurationProperties(RedisProperties.class)
 @EnableAsync
+@EnableRedisRepositories
 
 @ComponentScan("com.jphaugla")
 public class RedisConfig {
@@ -73,6 +76,13 @@ public class RedisConfig {
     public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+    @Bean
+    public StringRedisTemplate redisTemplate() {
+        StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(connectionFactory(redisStandaloneConfiguration(),
+                lettucePoolConfig(clientOptions(), clientResources())));
         return template;
     }
     @Bean("threadPoolTaskExecutor")

@@ -8,14 +8,17 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.jphaugla.data.BankGenerator;
 import com.jphaugla.domain.*;
-import com.jphaugla.repository.CustomerRepository;
-import com.jphaugla.repository.EmailRepository;
-import com.jphaugla.repository.PhoneRepository;
+import com.jphaugla.repository.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
 
 @Service
 
@@ -30,6 +33,15 @@ public class BankService {
 	private PhoneRepository phoneRepository;
 	@Autowired
 	private EmailRepository emailRepository;
+	@Autowired
+	private MerchantRepository merchantRepository;
+	@Autowired
+	private TransactionReturnRepository transactionReturnRepository;
+	@Autowired
+	private TransactionRepository transactionRepository;
+	@Autowired
+	private StringRedisTemplate redisTemplate;
+
 
 	private static final Logger logger = LoggerFactory.getLogger(BankService.class);
 
@@ -84,12 +96,40 @@ public class BankService {
 		List<Customer> customerIDList = customerRepository.findByzipcodeAndLastName(zipcode, lastName);
 		return customerIDList;
 	}
-/*
-	public List<Transaction> getMerchantTransactions(String merchant, String account, String to, String from) throws ParseException {
-		List<String> transactionKey = redisDao.getMerchantTransactions(merchant, account, to, from);
-		return dao.getTransactionsfromDelimitedKey(transactionKey);
-	};
 
+	public List<Transaction> getMerchantTransactions(String in_merchant, String account, Date startDate, Date endDate)
+			throws ParseException {
+		logger.info("merchant is " + in_merchant + " and account is " + account);
+		List <String> transactionIDs = new ArrayList<>();
+		List <Transaction> transactions = new ArrayList<>();
+		// Optional<Merchant> merchant = merchantRepository.findById(in_merchant);
+		// List<Transaction> transactions = transactionRepository.findByMerchantAndAccountNoAndPostingDateBetween
+				// (in_merchant, account, startDate, endDate);
+		String merchantKey = "Transaction:merchant:" + in_merchant;
+		String accountKey = "Transaction:accountNo:" + account;
+		String tempkey = "Tempkey:" + in_merchant + ":" + account;
+		String ztempkey = "TempZkey:postdate";
+		logger.info("accountKey is " + accountKey + " merchantkey is " + merchantKey);
+		if(redisTemplate.hasKey(merchantKey)) {
+			logger.info("found the merchant");
+		}
+		if (redisTemplate.hasKey(accountKey)) {
+			logger.info("found the account");
+		}
+		if (redisTemplate.hasKey("Transaction:1425J:idx")) {
+			logger.info("found trans 1425J");
+		}
+		redisTemplate.opsForSet().intersectAndStore(accountKey, merchantKey,ztempkey);
+		Set resultSet = redisTemplate.opsForSet().intersect(ztempkey,
+					redisTemplate.opsForZSet().range("Trans:PostDate",startDate.getTime(),endDate.getTime()));
+		transactionIDs.addAll(resultSet);
+		logger.info("result set returned:", resultSet.size());
+		// redisTemplate.opsForSet().intersectAndStore(silly,tempkey,ztempkey);
+		// transactionIDs.addAll(redisTemplate.opsForSet().members(ztempkey));
+		transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
+		return transactions;
+	};
+/*
 	public List<Transaction> getCreditCardTransactions(String creditCard, String account, String to, String from) throws ParseException {
 		List<String> transactionKey = redisDao.getCreditCardTransactions(creditCard, account, to, from);
 		return dao.getTransactionsfromDelimitedKey(transactionKey);
@@ -162,11 +202,21 @@ public class BankService {
 		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers
 				+ " customers. suffix is " + key_suffix);
 		int account_size = accounts.size();
+		List<Merchant> merchants = BankGenerator.createMerchantList();
+		List<TransactionReturn> transactionReturns = BankGenerator.createTransactionReturnList();
+		merchantRepository.saveAll(merchants);
+		transactionReturnRepository.saveAll(transactionReturns);
 		CompletableFuture<Integer> transaction_cntr = null;
 		for (int i = 0; i < totalTransactions; i++) {
 			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
-			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix);
+			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix,
+					 merchants, transactionReturns);
 			transaction_cntr = asyncService.writeTransaction(randomTransaction);
+			//   writes a sorted set to be used as the posted date index
+			if(randomTransaction.getPostingDate() != null) {
+				redisTemplate.opsForZSet().add("Trans:PostDate", randomTransaction.getTranId(),
+						randomTransaction.getPostingDate().getTime());
+			}
 		}
 		transaction_cntr.get();
 		transTimer.end();
