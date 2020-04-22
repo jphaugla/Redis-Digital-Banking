@@ -130,6 +130,51 @@ public class BankService {
 		return customerIDList;
 	}
 
+	private List<Transaction> getTransactionByStatus(String transactionStatus){
+		List<Transaction> transactions = transactionRepository.findByStatus(transactionStatus);
+		return transactions;
+	}
+
+	public void transactionStatusChange(String targetStatus) {
+		//  move target from authorized->settled->posted
+		logger.info("transactionStatusChange targetStatus is " + targetStatus);
+		List<Transaction> transactions = new ArrayList<>();
+		Transaction targetTransaction = new Transaction();
+		Date newDate = new Date();
+		if(targetStatus.equals("POSTED")) {
+			transactions = getTransactionByStatus("SETTLED");
+			logger.info("number of transactions in SETTLED " + transactions.size());
+			for(Transaction transaction: transactions) {
+				targetTransaction.setTranId(transaction.getTranId());
+				targetTransaction.setStatus(targetStatus);
+				targetTransaction.setPostingDate(newDate);
+				transactionRepository.save(targetTransaction);
+			}
+		} else {
+			transactions = getTransactionByStatus("AUTHORIZED");
+			logger.info("number of transactions in AUTHORIZED " + transactions.size());
+			for(Transaction transaction: transactions) {
+				targetTransaction.setTranId(transaction.getTranId());
+				targetTransaction.setStatus(targetStatus);
+				targetTransaction.setSettlementDate(newDate);
+				transactionRepository.save(targetTransaction);
+			}
+		}
+	}
+
+	public List<Transaction> getMerchantCategoryTransactions(String in_merchantCategory, String account,
+															 Date startDate, Date endDate)
+			throws ParseException {
+		List <String> transactionIDs = new ArrayList<>();
+		List <Transaction> transactions = new ArrayList<>();
+		logger.info("merchant is " + in_merchantCategory + " and account is " + account);
+		List<Merchant> merchants = merchantRepository.findByCategoryCode(in_merchantCategory);
+		for(Merchant merchant:merchants) {
+			transactions.addAll(getMerchantTransactions(merchant.getName(), account, startDate, endDate));
+		}
+		return transactions;
+	}
+
 	public List<Transaction> getMerchantTransactions(String in_merchant, String account, Date startDate, Date endDate)
 			throws ParseException {
 		logger.info("merchant is " + in_merchant + " and account is " + account);
@@ -201,6 +246,7 @@ public class BankService {
 
 	};
 
+
 	public List<Transaction> getTransactionReturns() {
 		List <Transaction> transactions = new ArrayList<>();
 		List <TransactionReturn> transactionReturns = new ArrayList<>();
@@ -209,6 +255,27 @@ public class BankService {
 		}
 		return transactions;
 	}
+	public List<String> transactionStatusReport() {
+		List<String> reportList = new ArrayList<>();
+		/*  slow as mud
+		int postedTotal = transactionRepository.findByStatus("POSTED").size();
+		hashMap.put("POSTED", postedTotal);
+		int settledTotal = transactionRepository.findByStatus("SETTLED").size();
+		hashMap.put("SETTLED", settledTotal);
+		int authorizedTotal = transactionRepository.findByStatus("AUTHORIZED").size();
+		hashMap.put("AUTHORIZED", authorizedTotal);
+		 */
+		String [] statuses = {"POSTED", "SETTLED", "AUTHORIZED"};
+		String reportLine=null;
+		for (String i:statuses) {
+			int total = Math.toIntExact(redisTemplate.opsForSet().size("Transaction:status:" + i));
+			reportLine = i + ":" + total;
+			reportList.add(reportLine);
+		}
+		return reportList;
+	}
+
+
 	public void saveSampleCustomer() throws ParseException {
 		Date create_date = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.28");
 		Date last_update = new SimpleDateFormat("yyyy.MM.dd").parse("2020.03.29");
@@ -275,9 +342,6 @@ public class BankService {
 		}
 	}
 
-	public List<Transaction> getTransactionsCTGDESC(String mrchntctgdesc) {
-		return dao.getTransactionsCTGDESC(mrchntctgdesc);
-	}
 	 */
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,

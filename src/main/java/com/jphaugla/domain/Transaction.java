@@ -32,7 +32,7 @@ public class Transaction {
     private Date settlementDate;
     private Date postingDate;
     //  this is authorized, posted, settled
-    private String status   ;
-    private @Indexed String  transactionReturn;
+    private @Indexed String status   ;
+    private @Indexed String transactionReturn;
     private String location;
 }

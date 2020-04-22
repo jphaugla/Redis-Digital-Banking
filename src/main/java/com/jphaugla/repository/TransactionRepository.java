@@ -20,6 +20,7 @@ public interface TransactionRepository extends CrudRepository<Transaction, Strin
 																	  String accountNo, Date startDate, Date endDate);
 
 	List<Transaction> findByTransactionReturn(String transactionReturn);
+	List<Transaction> findByStatus(String transactionStatus);
 
 
 }
