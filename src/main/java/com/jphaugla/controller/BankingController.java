@@ -166,4 +166,23 @@ public class BankingController {
 		return transactions;
 	}
 
+	@GetMapping("/addTag")
+
+	public void addTag(@RequestParam String transactionID, @RequestParam String accountNo,
+					   @RequestParam String tag, @RequestParam String operation) {
+		bankService.addTag(transactionID, accountNo, tag, operation);
+	}
+
+	@GetMapping("/getTags")
+	public HashMap <String, String> getAccountTagList(@RequestParam String accountNo) {
+		HashMap<String, String> accountTransactionHash = new HashMap<>();
+		accountTransactionHash.putAll(bankService.getAccountTagList(accountNo));
+		return accountTransactionHash;
+	}
+	@GetMapping("/getTransaction")
+	public Transaction getTransaction(@RequestParam String transactionID) {
+		Transaction transaction = bankService.getTransaction(transactionID);
+		return transaction;
+	}
+
 }

@@ -1,6 +1,7 @@
 package com.jphaugla.domain;
 
 import lombok.*;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.index.Indexed;

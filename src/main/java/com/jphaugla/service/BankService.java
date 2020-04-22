@@ -135,29 +135,38 @@ public class BankService {
 		return transactions;
 	}
 
+	public Transaction getTransaction(String transactionID) {
+		Optional<Transaction> optionalTransaction;
+		Transaction returnTransaction = null;
+		optionalTransaction = transactionRepository.findById(transactionID);
+		if(optionalTransaction.isPresent()) {
+			returnTransaction = optionalTransaction.get();
+		}
+		return returnTransaction;
+	}
+
 	public void transactionStatusChange(String targetStatus) {
 		//  move target from authorized->settled->posted
 		logger.info("transactionStatusChange targetStatus is " + targetStatus);
 		List<Transaction> transactions = new ArrayList<>();
-		Transaction targetTransaction = new Transaction();
+		// Transaction targetTransaction = new Transaction();
 		Date newDate = new Date();
 		if(targetStatus.equals("POSTED")) {
 			transactions = getTransactionByStatus("SETTLED");
 			logger.info("number of transactions in SETTLED " + transactions.size());
 			for(Transaction transaction: transactions) {
-				targetTransaction.setTranId(transaction.getTranId());
-				targetTransaction.setStatus(targetStatus);
-				targetTransaction.setPostingDate(newDate);
-				transactionRepository.save(targetTransaction);
+				transaction.setStatus(targetStatus);
+				transaction.setPostingDate(newDate);
+				transactionRepository.save(transaction);
+				redisTemplate.opsForZSet().add("Trans:PostDate", transaction.getTranId(), newDate.getTime());
 			}
 		} else {
 			transactions = getTransactionByStatus("AUTHORIZED");
 			logger.info("number of transactions in AUTHORIZED " + transactions.size());
 			for(Transaction transaction: transactions) {
-				targetTransaction.setTranId(transaction.getTranId());
-				targetTransaction.setStatus(targetStatus);
-				targetTransaction.setSettlementDate(newDate);
-				transactionRepository.save(targetTransaction);
+				transaction.setStatus(targetStatus);
+				transaction.setSettlementDate(newDate);
+				transactionRepository.save(transaction);
 			}
 		}
 	}
@@ -324,25 +333,41 @@ public class BankService {
 				"POSTED", null, "ATM665");
 		transactionRepository.save(transaction);
 	}
-/*
 
-	public List<Transaction> getTransactions(String accountId) {
+	public void addTag(String transactionID, String accountNo, String tag, String operation) {
+		// hold set of tags used on an account
+		String accountTags = "AccountTags:" + accountNo;
+		// hold set of transactions for a tag on an account
+		String tagKeyName = accountTags + ":tag:" + tag;
 
-
-		return dao.getTransactions(accountId);
-	}
-
-	public void addTag(String accountNo, String trandate, String transactionID, String tag, String operation) throws ParseException {
-		List<String> transactionKey = redisDao.addTag(accountNo, trandate, transactionID, tag, operation);
-		List <Transaction> transactions = dao.getTransactionsfromDelimitedKey(transactionKey);
-		Set<String> tagSet = new HashSet<String>(Arrays.asList(tag.split(", ")));
-		int transactionInt=Integer.parseInt(transactionID);
-		for( Transaction trans:transactions) {
-			dao.addTagPreparedNoWork(accountNo, trans.getTransactionTime(), transactionInt, tagSet);
+		if(operation.equals("ADD")) {
+			redisTemplate.opsForSet().add(tagKeyName,transactionID);
+			redisTemplate.opsForSet().add(accountTags,tag);
+		}
+		else {
+			redisTemplate.opsForSet().remove(tagKeyName,transactionID);
 		}
 	}
 
-	 */
+	public HashMap <String, String> getAccountTagList(String accountNo) {
+		String accountTags = "AccountTags:" + accountNo;
+		// hold set of transactions for a tag on an account
+		String tagKeyName = null;
+		HashMap <String, String> tagHashMap = new HashMap<>();
+
+		Set<String> returnAccountTags = redisTemplate.opsForSet().members(accountTags);
+		if(returnAccountTags != null) {
+			for (String tag : returnAccountTags) {
+				tagKeyName = accountTags + ":tag:" + tag;
+				Set<String> transactionIDList = redisTemplate.opsForSet().members(tagKeyName);
+				for (String transactionID : transactionIDList) {
+					tagHashMap.put(tag, transactionID);
+				}
+			}
+		}
+		return tagHashMap;
+	}
+
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,
 								String key_suffix)
