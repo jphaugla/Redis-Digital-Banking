@@ -1,5 +1,6 @@
 package com.jphaugla.service;
 
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -7,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jphaugla.data.BankGenerator;
 import com.jphaugla.domain.*;
 import com.jphaugla.repository.*;
@@ -15,7 +17,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.hash.HashMapper;
+import org.springframework.data.redis.hash.Jackson2HashMapper;
+import org.springframework.data.redis.hash.ObjectHashMapper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 
@@ -44,6 +54,8 @@ public class BankService {
 	private TransactionRepository transactionRepository;
 	@Autowired
 	private StringRedisTemplate redisTemplate;
+	@Autowired
+	ObjectMapper objectMapper;
 
 
 	private static final Logger logger = LoggerFactory.getLogger(BankService.class);
@@ -157,8 +169,7 @@ public class BankService {
 			for(Transaction transaction: transactions) {
 				transaction.setStatus(targetStatus);
 				transaction.setPostingDate(newDate);
-				transactionRepository.save(transaction);
-				redisTemplate.opsForZSet().add("Trans:PostDate", transaction.getTranId(), newDate.getTime());
+				writeTransaction(transaction);
 			}
 		} else {
 			transactions = getTransactionByStatus("AUTHORIZED");
@@ -166,9 +177,26 @@ public class BankService {
 			for(Transaction transaction: transactions) {
 				transaction.setStatus(targetStatus);
 				transaction.setSettlementDate(newDate);
-				transactionRepository.save(transaction);
+				writeTransaction(transaction);
 			}
 		}
+	}
+	//   writeTransaction using crud without future
+	private void writeTransaction(Transaction transaction) {
+		transactionRepository.save(transaction);
+		if(transaction.getPostingDate() != null) redisTemplate.opsForZSet().add("Trans:PostDate",
+				transaction.getTranId(), transaction.getPostingDate().getTime());
+	}
+	// writeTransaction using crud with Future
+	private CompletableFuture<Integer> writeTransactionFuture(Transaction transaction) throws IllegalAccessException {
+		CompletableFuture<Integer> transaction_cntr = null;
+		transaction_cntr = asyncService.writeTransaction(transaction);
+		//   writes a sorted set to be used as the posted date index
+		if (transaction.getPostingDate() != null) {
+			redisTemplate.opsForZSet().add("Trans:PostDate", transaction.getTranId(),
+					transaction.getPostingDate().getTime());
+		}
+		return transaction_cntr;
 	}
 
 	public List<Transaction> getMerchantCategoryTransactions(String in_merchantCategory, String account,
@@ -328,10 +356,10 @@ public class BankService {
 
 		Transaction transaction = new Transaction("1234", "acct01",
 				"Debit", merchant.getName(), "referenceKeyType",
-				"referenceKeyValue", 323.23,  323.22, "1631",
+				"referenceKeyValue", "323.23",  "323.22", "1631",
 				"Test Transaction", init_date, settle_date, post_date,
 				"POSTED", null, "ATM665");
-		transactionRepository.save(transaction);
+		writeTransaction(transaction);
 	}
 
 	public void addTag(String transactionID, String accountNo, String tag, String operation) {
@@ -370,8 +398,8 @@ public class BankService {
 
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,
-								String key_suffix)
-			throws ParseException, ExecutionException, InterruptedException {
+								String key_suffix, Boolean pipelined)
+			throws ParseException, ExecutionException, InterruptedException, IllegalAccessException {
 
 		List<Account> accounts = createCustomerAccount(noOfCustomers, key_suffix);
 		BankGenerator.date = new DateTime().minusDays(noOfDays).withTimeAtStartOfDay();
@@ -380,29 +408,132 @@ public class BankService {
 		int totalTransactions = noOfTransactions * noOfDays;
 
 		logger.info("Writing " + totalTransactions + " transactions for " + noOfCustomers
-				+ " customers. suffix is " + key_suffix);
+				+ " customers. suffix is " + key_suffix + " Pipelined is " + pipelined);
 		int account_size = accounts.size();
+		int transactionsPerAccount = noOfDays*noOfTransactions/account_size;
+		logger.info("number of accounts generated is " + account_size + " transactionsPerAccount "
+				+ transactionsPerAccount);
 		List<Merchant> merchants = BankGenerator.createMerchantList();
 		List<TransactionReturn> transactionReturns = BankGenerator.createTransactionReturnList();
 		merchantRepository.saveAll(merchants);
 		transactionReturnRepository.saveAll(transactionReturns);
 		CompletableFuture<Integer> transaction_cntr = null;
-		for (int i = 0; i < totalTransactions; i++) {
-			Account account = accounts.get(new Double(Math.random() * account_size).intValue());
-			Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix,
-					 merchants, transactionReturns);
-			transaction_cntr = asyncService.writeTransaction(randomTransaction);
-			//   writes a sorted set to be used as the posted date index
-			if(randomTransaction.getPostingDate() != null) {
-				redisTemplate.opsForZSet().add("Trans:PostDate", randomTransaction.getTranId(),
-						randomTransaction.getPostingDate().getTime());
+		if(pipelined) {
+			logger.info("doing this pipelined");
+			int transactionIndex = 0;
+			List<Transaction> transactionList = new ArrayList<>();
+			for(Account account:accounts) {
+				for(int i=0; i<transactionsPerAccount; i++) {
+					transactionIndex++;
+					Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, transactionIndex, account, key_suffix,
+							merchants, transactionReturns);
+					transactionList.add(randomTransaction);
+				}
+				writeAccountTransactions(transactionList);
+				transactionList.clear();
 			}
+
+		} else {
+			//
+			for (int i = 0; i < totalTransactions; i++) {
+				//  from the account list, grabbing a random account
+				//   with this random cannot do pipelining on account since not in account order
+				Account account = accounts.get(new Double(Math.random() * account_size).intValue());
+				Transaction randomTransaction = BankGenerator.createRandomTransaction(noOfDays, i, account, key_suffix,
+						merchants, transactionReturns);
+				transaction_cntr = writeTransactionFuture(randomTransaction);
+			}
+			transaction_cntr.get();
 		}
-		transaction_cntr.get();
 		transTimer.end();
 		logger.info("Finished writing " + totalTransactions + " created in " +
 				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
+	}
+	@Async("threadPoolTaskExecutor")
+	private CompletableFuture<Integer>  writeTransactionList(List<Transaction> transactionList) {
+
+		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
+		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
+			@Override
+			public Object doInRedis(RedisConnection connection)
+					throws DataAccessException {
+				for (Transaction tx : transactionList) {
+					String hashName = "Transaction:" + tx.getTranId();
+					Map<byte[], byte[]> mappedHash = mapper.toHash(tx);
+					connection.hMSet(hashName.getBytes(), mappedHash);
+				}
+
+				return null;
+			}
+		});
+		return CompletableFuture.completedFuture(0);
+	}
+
+	@Async("threadPoolTaskExecutor")
+	private CompletableFuture<Integer> writePostedDateIndex(List<Transaction> transactionList) {
+
+		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
+		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
+			@Override
+			public Object doInRedis(RedisConnection connection)
+					throws DataAccessException {
+				String postedDateSet = "Trans:PostDate";
+				for (Transaction tx : transactionList) {
+					if(tx.getPostingDate() != null) {
+						connection.zAdd(postedDateSet.getBytes(),  tx.getPostingDate().getTime(),
+								tx.getTranId().getBytes());
+					}
+				}
+
+				return null;
+			}
+		});
+		return CompletableFuture.completedFuture(0);
+	}
+
+
+
+	private void  writeAccountTransactions (List<Transaction> transactionList) throws IllegalAccessException, ExecutionException, InterruptedException {
+		CompletableFuture<Integer> posted_date_cntr = null;
+		CompletableFuture<Integer> acct_trans_cntr = null;
+		//   writes a sorted set to be used as the posted date index
+		// logger.info("entering writeAccountTransactions with list size of " + transactionList.size());
+		acct_trans_cntr = writeTransactionList(transactionList);
+		posted_date_cntr = writePostedDateIndex(transactionList);
+		//   write using redisTemplate
+		for (Transaction transaction:transactionList) {
+			String hashName = "Transaction:" + transaction.getTranId();
+			String idxSetName = hashName + ":idx";
+			String merchantIndexName = "Transaction:merchant:" + transaction.getMerchant();
+			String accountIndexName = "Transaction:account:" + transaction.getAccountNo();
+			String statusIndexName = "Transaction:status:" + transaction.getStatus();
+			redisTemplate.opsForSet().add(idxSetName, merchantIndexName, accountIndexName, statusIndexName);
+			redisTemplate.opsForSet().add(merchantIndexName, transaction.getTranId());
+			redisTemplate.opsForSet().add(accountIndexName, transaction.getTranId());
+			redisTemplate.opsForSet().add(statusIndexName, transaction.getTranId());
+			//if(transaction.getPostingDate() != null) redisTemplate.opsForZSet().add("Trans:PostDate",
+					//transaction.getTranId(), transaction.getPostingDate().getTime());
+				/* Jackson2HashMapper jm = new Jackson2HashMapper(objectMapper, false);
+				 Map<String, Object> transactionMap = new HashMap<String,Object>();
+
+				Field[] allFields = transaction.getClass().getDeclaredFields();
+				for (Field field : allFields) {
+					field.setAccessible(true);
+					Object value = field.get(transaction);
+					logger.info("field " + field.getName() + " has value " + value + " type " + field.getType());
+					if(field.getType().equals("java.lang.Double")) {
+						String numberAsString = String.valueOf(value);
+						transactionMap.put(field.getName(), numberAsString);
+					} else transactionMap.put(field.getName(), value);
+				}
+				redisTemplate.opsForHash().putAll(hashName, jm.toHash(transaction));
+
+				 */
+			// Map<String, Object> jobHash = (Map<String, Object>) objectMapper.convertValue(transaction, Transaction.class);
+		}
+		acct_trans_cntr.get();
+		posted_date_cntr.get();
 	}
 
 	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix) throws ExecutionException, InterruptedException {
@@ -410,6 +541,7 @@ public class BankService {
 		logger.info("Creating " + noOfCustomers + " customers with accounts and suffix " + key_suffix);
 		BankGenerator.Timer custTimer = new BankGenerator.Timer();
 		List<Account> accounts = null;
+		List<Account> allAccounts = new ArrayList<>();
 		List<Email> emails = null;
 		List<PhoneNumber> phoneNumbers = null;
 		CompletableFuture<Integer> account_cntr = null;
@@ -435,6 +567,9 @@ public class BankService {
 				account_cntr = asyncService.writeAccounts(account);
 			}
 			customer_cntr = asyncService.writeCustomer(customer);
+			if(accounts.size()>0) {
+				allAccounts.addAll(accounts);
+			}
 		}
 
 		account_cntr.get();
@@ -445,7 +580,7 @@ public class BankService {
 		logger.info("Customers=" + noOfCustomers + " Accounts=" + totalAccounts +
 				" Emails=" + totalEmails + " Phones=" + totalPhone + " in " +
 				   custTimer.getTimeTakenSeconds() + " secs");
-		return accounts;
+		return allAccounts;
 	}
 
 	private void sleep(int i) {

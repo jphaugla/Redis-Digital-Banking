@@ -18,7 +18,6 @@ import java.util.List;
 @Setter
 
 @RedisHash("Customer")
-
 public class Customer {
     private  @Id String customerId;
     private  String addressLine1;

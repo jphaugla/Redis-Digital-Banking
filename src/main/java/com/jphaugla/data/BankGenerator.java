@@ -177,7 +177,7 @@ public class BankGenerator {
 		Transaction transaction = new Transaction();
 		createItemsAndAmount(noOfItems, transaction);
 		transaction.setAccountNo(account.getAccountNo());
-		String tran_id = idx.toString() + key_suffix;
+		String tran_id = "{" + account.getAccountNo() + "}" + idx.toString() + key_suffix;
 		transaction.setTranId(tran_id);
         String transactionStat = transactionStatus[randomLocation];
         transaction.setStatus(transactionStat);
@@ -229,8 +229,8 @@ public class BankGenerator {
 
 			totalAmount += amount;
 		}
-		transaction.setAmount(totalAmount);
-        transaction.setOriginalAmount(totalAmount);
+		transaction.setAmount(String.valueOf(totalAmount));
+        transaction.setOriginalAmount(String.valueOf(totalAmount));
 	}
 
 

@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
 
+import java.io.Serializable;
 import java.util.Date;
 @Data
 @AllArgsConstructor
@@ -16,7 +17,7 @@ import java.util.Date;
 
 @RedisHash("Transaction")
 
-public class Transaction {
+public class Transaction  {
     private @Id String tranId;
     private @Indexed String accountNo;
     // debit or credit
@@ -24,8 +25,8 @@ public class Transaction {
     private @Indexed String merchant;
     private String referenceKeyType;
     private String referenceKeyValue;
-    private Double originalAmount;
-    private Double amount;
+    private String originalAmount;
+    private String amount;
     private String tranCd ;
     private String description;
     private Date initialDate;
