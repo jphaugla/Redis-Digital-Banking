@@ -3,6 +3,8 @@ package com.jphaugla.service;
 import com.jphaugla.domain.*;
 import com.jphaugla.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,8 @@ public class AsyncService {
     private PhoneRepository phoneRepository;
     @Autowired
     private EmailRepository emailRepository;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<Integer> writeAllTransaction(List<Transaction> transactions) {
@@ -33,6 +37,10 @@ public class AsyncService {
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<Integer> writeTransaction(Transaction transaction) {
         transactionRepository.save(transaction);
+        if (transaction.getPostingDate() != null) {
+            redisTemplate.opsForZSet().add("Trans:PostDate", transaction.getTranId(),
+                    transaction.getPostingDate().getTime());
+        }
         return CompletableFuture.completedFuture(0);
     }
 

@@ -193,10 +193,7 @@ public class BankService {
 		CompletableFuture<Integer> transaction_cntr = null;
 		transaction_cntr = asyncService.writeTransaction(transaction);
 		//   writes a sorted set to be used as the posted date index
-		if (transaction.getPostingDate() != null) {
-			redisTemplate.opsForZSet().add("Trans:PostDate", transaction.getTranId(),
-					transaction.getPostingDate().getTime());
-		}
+
 		return transaction_cntr;
 	}
 
