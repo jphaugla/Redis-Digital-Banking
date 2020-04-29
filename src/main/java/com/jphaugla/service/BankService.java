@@ -429,9 +429,10 @@ public class BankService {
 							merchants, transactionReturns);
 					transactionList.add(randomTransaction);
 				}
-				writeAccountTransactions(transactionList);
+				transaction_cntr = writeAccountTransactions(transactionList);
 				transactionList.clear();
 			}
+			transaction_cntr.get();
 
 		} else {
 			//
@@ -450,8 +451,9 @@ public class BankService {
 				transTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
-	@Async("threadPoolTaskExecutor")
-	private CompletableFuture<Integer>  writeTransactionList(List<Transaction> transactionList) {
+
+
+	private void writeTransactionList(List<Transaction> transactionList) {
 
 		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
 		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
@@ -467,11 +469,10 @@ public class BankService {
 				return null;
 			}
 		});
-		return CompletableFuture.completedFuture(0);
 	}
 
-	@Async("threadPoolTaskExecutor")
-	private CompletableFuture<Integer> writePostedDateIndex(List<Transaction> transactionList) {
+
+	private void writePostedDateIndex(List<Transaction> transactionList) {
 
 		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
 		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
@@ -489,18 +490,17 @@ public class BankService {
 				return null;
 			}
 		});
-		return CompletableFuture.completedFuture(0);
+
 	}
 
 
+	@Async("threadPoolTaskExecutor")
+	private CompletableFuture<Integer>  writeAccountTransactions (List<Transaction> transactionList) throws IllegalAccessException, ExecutionException, InterruptedException {
 
-	private void  writeAccountTransactions (List<Transaction> transactionList) throws IllegalAccessException, ExecutionException, InterruptedException {
-		CompletableFuture<Integer> posted_date_cntr = null;
-		CompletableFuture<Integer> acct_trans_cntr = null;
 		//   writes a sorted set to be used as the posted date index
 		// logger.info("entering writeAccountTransactions with list size of " + transactionList.size());
-		acct_trans_cntr = writeTransactionList(transactionList);
-		posted_date_cntr = writePostedDateIndex(transactionList);
+		writeTransactionList(transactionList);
+		writePostedDateIndex(transactionList);
 		//   write using redisTemplate
 		for (Transaction transaction:transactionList) {
 			String hashName = "Transaction:" + transaction.getTranId();
@@ -532,8 +532,7 @@ public class BankService {
 				 */
 			// Map<String, Object> jobHash = (Map<String, Object>) objectMapper.convertValue(transaction, Transaction.class);
 		}
-		acct_trans_cntr.get();
-		posted_date_cntr.get();
+		return CompletableFuture.completedFuture(0);
 	}
 
 	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix) throws ExecutionException, InterruptedException {

@@ -36,4 +36,5 @@ public class Transaction  {
     private @Indexed String status   ;
     private @Indexed String transactionReturn;
     private String location;
+
 }

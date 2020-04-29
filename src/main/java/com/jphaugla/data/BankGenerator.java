@@ -16,6 +16,7 @@ public class BankGenerator {
 	private static final int BASE = 1000000;
 	private static final int DAY_MILLIS = 1000 * 60 *60 * 24;
 	private static AtomicInteger customerIdGenerator = new AtomicInteger(1);
+	private static AtomicInteger accountNoGenerator = new AtomicInteger(1);
 	private static List<String> accountTypes = Arrays.asList("Current", "Joint Current", "Saving", "Mortgage",
             "E-Saving", "Deposit");
 	private static List<String> accountIds = new ArrayList<String>();
@@ -127,7 +128,8 @@ public class BankGenerator {
 		for (int i = 0; i < noOfAccounts; i++){
 			
 			Account account = new Account();
-			String accountNumber = "Acct" + Integer.toString(i) + key_suffix;
+			String accountNumber = "Acct" + accountNoGenerator.getAndIncrement() + "" + key_suffix;
+			// String accountNumber = "Acct" + Integer.toString(i) + key_suffix;
 			account.setCardNum( UUID.randomUUID().toString().replace('-','x'));
 			account.setCustomerId(customer.getCustomerId());
 			account.setAccountNo(accountNumber);
