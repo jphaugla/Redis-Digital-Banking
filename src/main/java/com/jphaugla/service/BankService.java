@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.connection.lettuce.LettuceConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.hash.HashMapper;
@@ -460,12 +461,13 @@ public class BankService {
 			@Override
 			public Object doInRedis(RedisConnection connection)
 					throws DataAccessException {
+				connection.openPipeline();
 				for (Transaction tx : transactionList) {
 					String hashName = "Transaction:" + tx.getTranId();
 					Map<byte[], byte[]> mappedHash = mapper.toHash(tx);
 					connection.hMSet(hashName.getBytes(), mappedHash);
 				}
-
+				connection.closePipeline();
 				return null;
 			}
 		});
@@ -479,6 +481,7 @@ public class BankService {
 			@Override
 			public Object doInRedis(RedisConnection connection)
 					throws DataAccessException {
+				connection.openPipeline();
 				String postedDateSet = "Trans:PostDate";
 				for (Transaction tx : transactionList) {
 					if(tx.getPostingDate() != null) {
@@ -486,7 +489,7 @@ public class BankService {
 								tx.getTranId().getBytes());
 					}
 				}
-
+				connection.closePipeline();
 				return null;
 			}
 		});

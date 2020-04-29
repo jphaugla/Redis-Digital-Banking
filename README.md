@@ -56,6 +56,7 @@ java -jar target/redis-0.0.1-SNAPSHOT.jar
 ```bash
 ./scripts/generateData.sh
 ```
+
 ## Redis CRUD indexing strategy
 Very exciting that using the CRUD repository, a field in the java class with the Indexed annotation is treated as an index.
 ### User class

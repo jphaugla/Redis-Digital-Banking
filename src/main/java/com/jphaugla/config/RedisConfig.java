@@ -14,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -64,10 +65,20 @@ public class RedisConfig {
                 .build();
     }
 
-    @Bean
+    /*
     public RedisConnectionFactory connectionFactory(RedisStandaloneConfiguration redisStandaloneConfiguration,
                                                     LettucePoolingClientConfiguration lettucePoolConfig) {
         return new LettuceConnectionFactory(redisStandaloneConfiguration, lettucePoolConfig);
+    }
+
+     */
+    @Bean
+    public RedisConnectionFactory connectionFactory(RedisStandaloneConfiguration redisStandaloneConfiguration,
+                                                    LettucePoolingClientConfiguration lettucePoolConfig) {
+        LettuceConnectionFactory lettuceConnectionFactory =  new LettuceConnectionFactory(redisStandaloneConfiguration,
+                lettucePoolConfig);
+        RedisConnectionFactory factory =  lettuceConnectionFactory;
+        return factory;
     }
 
     @Bean
