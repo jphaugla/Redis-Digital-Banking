@@ -75,4 +75,5 @@ public class AsyncService {
         emailRepository.save(email);
         return CompletableFuture.completedFuture(0);
     }
+
 }

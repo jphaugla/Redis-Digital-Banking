@@ -516,7 +516,7 @@ public class BankService {
 
 
 	@Async("threadPoolTaskExecutor")
-	private CompletableFuture<Integer>  writeAccountTransactions (List<Transaction> transactionList) throws IllegalAccessException, ExecutionException, InterruptedException {
+	public CompletableFuture<Integer>  writeAccountTransactions (List<Transaction> transactionList) throws IllegalAccessException, ExecutionException, InterruptedException {
 
 		//   writes a sorted set to be used as the posted date index
 		// logger.info("entering writeAccountTransactions with list size of " + transactionList.size());
