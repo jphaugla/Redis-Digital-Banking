@@ -1,5 +1,6 @@
 # Redis-Digital-Banking
-Provides a quick-start example of using Redis with springBoot with Banking structures
+Provides a quick-start example of using Redis with springBoot with Banking structures.  Digital Banking uses an API microservices approach to enable high speed requests for account, customer and transaction information.  As seem below, this data is useful for a variety of business purposes in the bank.
+<a href="" rel="Digital Banking"><img src="images/DigitalBanking.png" alt="" /></a>
 
 ## Overview
 In this tutorial, a java spring boot application is run through a jar file to support typical API calls to a REDIS banking data layer.  A redis docker configuration is included.
@@ -40,6 +41,8 @@ This is basic spring links
 
 The java code demonstrates common API actions with the data persisted in REDIS.  The java spring Boot framework mminimizes the amount of code to build and maintain this solution.  Maven is used to build the java code and the code is deployed to the tomcat server.
 
+## Data Structures in use
+<a href="" rel="Tables Structures Used"><img src="images/Tables.png" alt="" /></a>
 ## To execute the code
 (Alternatively, this can be run through intelli4j)
 
@@ -56,9 +59,12 @@ java -jar target/redis-0.0.1-SNAPSHOT.jar
 ```bash
 ./scripts/generateData.sh
 ```
+Shows a test of generateData.sh
+<a href="" rel="Generate Data Benchmark"><img src="images/Benchmark.png" alt="" /></a>
 
 ## Redis CRUD indexing strategy
 Very exciting that using the CRUD repository, a field in the java class with the Indexed annotation is treated as an index.
+<a href="" rel="Spring Indexes"><img src="images/Springindexes.png" alt="" /></a>
 ### User class
 ```bash
 @RedisHash("user")

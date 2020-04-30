@@ -533,25 +533,6 @@ public class BankService {
 			redisTemplate.opsForSet().add(merchantIndexName, transaction.getTranId());
 			redisTemplate.opsForSet().add(accountIndexName, transaction.getTranId());
 			redisTemplate.opsForSet().add(statusIndexName, transaction.getTranId());
-			//if(transaction.getPostingDate() != null) redisTemplate.opsForZSet().add("Trans:PostDate",
-					//transaction.getTranId(), transaction.getPostingDate().getTime());
-				/* Jackson2HashMapper jm = new Jackson2HashMapper(objectMapper, false);
-				 Map<String, Object> transactionMap = new HashMap<String,Object>();
-
-				Field[] allFields = transaction.getClass().getDeclaredFields();
-				for (Field field : allFields) {
-					field.setAccessible(true);
-					Object value = field.get(transaction);
-					logger.info("field " + field.getName() + " has value " + value + " type " + field.getType());
-					if(field.getType().equals("java.lang.Double")) {
-						String numberAsString = String.valueOf(value);
-						transactionMap.put(field.getName(), numberAsString);
-					} else transactionMap.put(field.getName(), value);
-				}
-				redisTemplate.opsForHash().putAll(hashName, jm.toHash(transaction));
-
-				 */
-			// Map<String, Object> jobHash = (Map<String, Object>) objectMapper.convertValue(transaction, Transaction.class);
 		}
 		return CompletableFuture.completedFuture(0);
 	}
