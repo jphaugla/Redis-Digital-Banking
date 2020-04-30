@@ -54,6 +54,16 @@ public class BankingController {
 
 		return "Done";
 	}
+
+	@GetMapping("/testPipeline")
+	@ResponseBody
+	public String testPipeline (@RequestParam Integer noOfRecords)
+			throws ParseException, ExecutionException, InterruptedException, IllegalAccessException {
+
+		bankService.testPipeline(noOfRecords);
+
+		return "Done";
+	}
 	@GetMapping("/customer")
 
 	public Optional<Customer> getCustomer(@RequestParam String customerId) {

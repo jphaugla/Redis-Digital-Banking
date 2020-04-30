@@ -394,6 +394,23 @@ public class BankService {
 		return tagHashMap;
 	}
 
+	public String testPipeline(Integer noOfRecords) {
+		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
+			@Override
+			public Object doInRedis(RedisConnection connection)
+					throws DataAccessException {
+				connection.openPipeline();
+				String keyAndValue=null;
+				for (int index=0;index<noOfRecords;index++) {
+					keyAndValue = "Silly"+index;
+					connection.set(keyAndValue.getBytes(), keyAndValue.getBytes());
+				}
+				connection.closePipeline();
+				return null;
+			}
+		});
+		return "Done";
+	}
 
 	public  String generateData(Integer noOfCustomers, Integer noOfTransactions, Integer noOfDays,
 								String key_suffix, Boolean pipelined)
