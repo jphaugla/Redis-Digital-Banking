@@ -472,7 +472,7 @@ public class BankService {
 	}
 
 
-	private void writeTransactionList(List<Transaction> transactionList) {
+	public void writeTransactionList(List<Transaction> transactionList) {
 
 		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
 		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
@@ -492,7 +492,7 @@ public class BankService {
 	}
 
 
-	private void writePostedDateIndex(List<Transaction> transactionList) {
+	public void writePostedDateIndex(List<Transaction> transactionList) {
 
 		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
 		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
