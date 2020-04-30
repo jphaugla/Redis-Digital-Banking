@@ -5,6 +5,12 @@ Provides a quick-start example of using Redis with springBoot with Banking struc
 ## Overview
 In this tutorial, a java spring boot application is run through a jar file to support typical API calls to a REDIS banking data layer.  A redis docker configuration is included.
 
+## Redis Advantages for this Digital Banking
+ * Redis easily handles high write transaction volume
+ * Redis has no tombstone issues and can upsert posted transactions over pending
+ * Redis scales vertically (large nodes)  and horizontally (many nodes)
+ * Redis spring crud reporitory automates secondary index creation and usage
+
 ## Requirements
 * Docker installed on your local system, see [Docker Installation Instructions](https://docs.docker.com/engine/installation/).
 
@@ -54,14 +60,36 @@ mvn package
 ```bash
 java -jar target/redis-0.0.1-SNAPSHOT.jar
 ```
-3.  Test the application from a separate terminal window
-  * save some "in-code" values
+3.  Test the application from a separate terminal window.  This script uses an API call to generate sample banking customers, accounts and transactions.  It uses Spring ASYNC techniques to generate higher load.  A flag chooses between running the transactions pipelined in Redis or in normal non-pipelined method.
 ```bash
 ./scripts/generateData.sh
 ```
-Shows a test of generateData.sh
+Shows a benchmark test run of  generateData.sh on GCP servers
 <a href="" rel="Generate Data Benchmark"><img src="images/Benchmark.png" alt="" /></a>
 
+4.  Investigate the APIs in ./scripts
+  * addTag.sh - add a tag to a transaction.  Tags allow user to mark  transactions to be in a buckets such as Travel or Food for budgetary tracking purposes
+  * generateLots.sh - for server testing to generate higher load levels.  Use with startAppservers.sh 
+  * getByAccount.sh - find transactions for an account between a date range
+  * getByCreditCard.sh - find transactions for a credit card  between a date range
+  * getByCustID.sh - retrieve transations for customer
+  * getByEmail.sh - retrieve customer record using email address
+  * getByMerchant.sh - find all transactions for an account from one merchant for date range
+  * getByMerchantCategory.sh - find all transactions for an account from merchant category for date range
+  * getByNamePhone.sh - get customers by phone and full name.
+  * getByPhone.sh - get customers by phone only
+  * getByStateCity.sh - get customers by city and state
+  * getByZipLastname.sh -  get by zipcode and lastname.
+  * getReturns.sh - get all returned transactions
+  * getTags.sh - get all tags on an account
+  * getTransaction.sh - get one transaction by its transaction ID
+  * getTransactionStatus.sh - see count of transactions by account status of PENDING, AUTHORIZED, SETTLED
+  * saveAccount.sh - save a sample account
+  * saveCustomer.sh - save a sample customer
+  * saveTransaction.sh - save a sample Transaction
+  * startAppservers.sh - start multiple app server instances for load testing
+  * testPipeline.sh - test pipelining
+  * updateTransactionStatus.sh - generate new transactions to move all of one transaction Status up to the next transaction status. Parameter is target status.  Can choose SETTLED or POSTED.  
 ## Redis CRUD indexing strategy
 Very exciting that using the CRUD repository, a field in the java class with the Indexed annotation is treated as an index.
 <a href="" rel="Spring Indexes"><img src="images/Springindexes.png" alt="" /></a>

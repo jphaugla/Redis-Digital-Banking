@@ -1,3 +1,3 @@
-#  easiest to look up a credit card using redinsight and edit this script to find an existing credit card
+#  add a tag to a transaction.  Tags allow user to mark  transactions to be in a buckets such as Travel or Food for budgetary tracking purposes
 # date can be looked up and put in range
 curl -X GET -H "Content-Type: application/json"  'http://localhost:8080/addTag/?transactionID=45115J&accountNo=Acct1J&tag=Travel&operation=ADD'

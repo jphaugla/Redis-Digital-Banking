@@ -1,3 +1,5 @@
+# for server testing to generate higher load levels.  
+# Use with startAppservers.sh 
 nohup curl 'http://localhost:8080/generateData?noOfCustomers=5000&noOfTransactions=100000&noOfDays=10&key_suffix=J&pipelined=true' > /tmp/generateJ.out 2>&1 &
 nohup curl 'http://localhost:8081/generateData?noOfCustomers=5000&noOfTransactions=100000&noOfDays=10&key_suffix=P&pipelined=true' > /tmp/generateP.out 2>&1 &
 nohup curl 'http://localhost:8082/generateData?noOfCustomers=5000&noOfTransactions=100000&noOfDays=10&key_suffix=H&pipelined=true' > /tmp/generateH.out 2>&1 &

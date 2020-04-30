@@ -1,3 +1,3 @@
-#  easiest to look up a credit card using redinsight and edit this script to find an existing credit card
-# date can be looked up and put in range
+# get all tags on an account 
+# 
 curl -X GET -H "Content-Type: application/json"  'http://localhost:8080/getTags/?accountNo=Acct1J'
