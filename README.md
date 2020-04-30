@@ -24,7 +24,7 @@ In this tutorial, a java spring boot application is run through a jar file to su
 
  * [spring data for redis github](https://github.com/spring-projects/spring-data-examples/tree/master/redis/repositories)
  * [spring data for redis sample code](https://www.oodlestechnologies.com/blogs/Using-Redis-with-CrudRepository-in-Spring-Boot/)
- * [lettuce tips redis spring boot] (https://www.bytepitch.com/blog/redis-integration-spring-boot/)
+ * [lettuce tips redis spring boot](https://www.bytepitch.com/blog/redis-integration-spring-boot/)
  * [spring data Reference in domain](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/main/java/example/springdata/redis/repositories/Person.java)
  * [spring data referencee test code](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/test/java/example/springdata/redis/repositories/PersonRepositoryTests.java)
 ## Getting Started
@@ -72,14 +72,14 @@ Shows a benchmark test run of  generateData.sh on GCP servers
   * generateLots.sh - for server testing to generate higher load levels.  Use with startAppservers.sh 
   * getByAccount.sh - find transactions for an account between a date range
   * getByCreditCard.sh - find transactions for a credit card  between a date range
-  * getByCustID.sh - retrieve transations for customer
+  * getByCustID.sh - retrieve transactions for customer
   * getByEmail.sh - retrieve customer record using email address
   * getByMerchant.sh - find all transactions for an account from one merchant for date range
   * getByMerchantCategory.sh - find all transactions for an account from merchant category for date range
   * getByNamePhone.sh - get customers by phone and full name.
   * getByPhone.sh - get customers by phone only
   * getByStateCity.sh - get customers by city and state
-  * getByZipLastname.sh -  get by zipcode and lastname.
+  * getByZipLastname.sh -  get customers by zipcode and lastname.
   * getReturns.sh - get all returned transactions
   * getTags.sh - get all tags on an account
   * getTransaction.sh - get one transaction by its transaction ID
