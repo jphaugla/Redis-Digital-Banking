@@ -158,10 +158,12 @@ public class BankService {
 		return returnTransaction;
 	}
 
-	public void transactionStatusChange(String targetStatus) {
+	public void transactionStatusChange(String targetStatus) throws IllegalAccessException, ExecutionException, InterruptedException {
 		//  move target from authorized->settled->posted
 		logger.info("transactionStatusChange targetStatus is " + targetStatus);
+		BankGenerator.Timer transTimer = new BankGenerator.Timer();
 		List<Transaction> transactions = new ArrayList<>();
+		CompletableFuture<Integer> transaction_cntr = null;
 		// Transaction targetTransaction = new Transaction();
 		Date newDate = new Date();
 		if(targetStatus.equals("POSTED")) {
@@ -170,7 +172,7 @@ public class BankService {
 			for(Transaction transaction: transactions) {
 				transaction.setStatus(targetStatus);
 				transaction.setPostingDate(newDate);
-				writeTransaction(transaction);
+				transaction_cntr = writeTransactionFuture(transaction);
 			}
 		} else {
 			transactions = getTransactionByStatus("AUTHORIZED");
@@ -178,9 +180,13 @@ public class BankService {
 			for(Transaction transaction: transactions) {
 				transaction.setStatus(targetStatus);
 				transaction.setSettlementDate(newDate);
-				writeTransaction(transaction);
+				transaction_cntr = writeTransactionFuture(transaction);
 			}
 		}
+		transaction_cntr.get();
+		transTimer.end();
+		logger.info("Finished updating " + transactions.size() + " transactions in " +
+				transTimer.getTimeTakenSeconds() + " seconds.");
 	}
 	//   writeTransaction using crud without future
 	private void writeTransaction(Transaction transaction) {
@@ -266,6 +272,7 @@ public class BankService {
 		//  get the account for this credit card
 		List <Transaction> transactions = new ArrayList<>();
 		List<Account> accounts = accountRepository.getAccountsByCardNum(creditCard);
+		logger.info("number of accounts for credit card is " + accounts.size());
 		if(accounts.size() > 0) {
 
 			if (accounts.size() != 1) {
@@ -274,7 +281,8 @@ public class BankService {
 					logger.info("Account is" + account.getAccountNo());
 				}
 			}
-			String accountKey = "Transaction:accountNo:" + accounts.get(0);
+			String accountKey = "Transaction:accountNo:" + accounts.get(0).getAccountNo();
+			logger.info("accountKey is " + accountKey);
 			transactions = getAccountsByDateRange( accountKey, startDate, endDate);
 		}
 		return transactions;
@@ -383,9 +391,12 @@ public class BankService {
 
 		Set<String> returnAccountTags = redisTemplate.opsForSet().members(accountTags);
 		if(returnAccountTags != null) {
+			logger.info("found account tag for " + accountTags + " with returnAccountTags " + returnAccountTags);
 			for (String tag : returnAccountTags) {
 				tagKeyName = accountTags + ":tag:" + tag;
+				logger.info("tagkeyname is " + tagKeyName);
 				Set<String> transactionIDList = redisTemplate.opsForSet().members(tagKeyName);
+				logger.info("found list " + transactionIDList);
 				for (String transactionID : transactionIDList) {
 					tagHashMap.put(tag, transactionID);
 				}
@@ -451,7 +462,6 @@ public class BankService {
 				transaction_cntr = writeAccountTransactions(transactionList);
 				transactionList.clear();
 			}
-			transaction_cntr.get();
 
 		} else {
 			//
@@ -463,8 +473,8 @@ public class BankService {
 						merchants, transactionReturns);
 				transaction_cntr = writeTransactionFuture(randomTransaction);
 			}
-			transaction_cntr.get();
 		}
+		transaction_cntr.get();
 		transTimer.end();
 		logger.info("Finished writing " + totalTransactions + " created in " +
 				transTimer.getTimeTakenSeconds() + " seconds.");
@@ -472,69 +482,11 @@ public class BankService {
 	}
 
 
-	public void writeTransactionList(List<Transaction> transactionList) {
-
-		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
-		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
-			@Override
-			public Object doInRedis(RedisConnection connection)
-					throws DataAccessException {
-				connection.openPipeline();
-				for (Transaction tx : transactionList) {
-					String hashName = "Transaction:" + tx.getTranId();
-					Map<byte[], byte[]> mappedHash = mapper.toHash(tx);
-					connection.hMSet(hashName.getBytes(), mappedHash);
-				}
-				connection.closePipeline();
-				return null;
-			}
-		});
-	}
-
-
-	public void writePostedDateIndex(List<Transaction> transactionList) {
-
-		HashMapper<Object, byte[], byte[]> mapper = new ObjectHashMapper();
-		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
-			@Override
-			public Object doInRedis(RedisConnection connection)
-					throws DataAccessException {
-				connection.openPipeline();
-				String postedDateSet = "Trans:PostDate";
-				for (Transaction tx : transactionList) {
-					if(tx.getPostingDate() != null) {
-						connection.zAdd(postedDateSet.getBytes(),  tx.getPostingDate().getTime(),
-								tx.getTranId().getBytes());
-					}
-				}
-				connection.closePipeline();
-				return null;
-			}
-		});
-
-	}
-
-
-	@Async("threadPoolTaskExecutor")
 	public CompletableFuture<Integer>  writeAccountTransactions (List<Transaction> transactionList) throws IllegalAccessException, ExecutionException, InterruptedException {
 
-		//   writes a sorted set to be used as the posted date index
-		// logger.info("entering writeAccountTransactions with list size of " + transactionList.size());
-		writeTransactionList(transactionList);
-		writePostedDateIndex(transactionList);
-		//   write using redisTemplate
-		for (Transaction transaction:transactionList) {
-			String hashName = "Transaction:" + transaction.getTranId();
-			String idxSetName = hashName + ":idx";
-			String merchantIndexName = "Transaction:merchant:" + transaction.getMerchant();
-			String accountIndexName = "Transaction:account:" + transaction.getAccountNo();
-			String statusIndexName = "Transaction:status:" + transaction.getStatus();
-			redisTemplate.opsForSet().add(idxSetName, merchantIndexName, accountIndexName, statusIndexName);
-			redisTemplate.opsForSet().add(merchantIndexName, transaction.getTranId());
-			redisTemplate.opsForSet().add(accountIndexName, transaction.getTranId());
-			redisTemplate.opsForSet().add(statusIndexName, transaction.getTranId());
-		}
-		return CompletableFuture.completedFuture(0);
+		CompletableFuture<Integer> returnVal = null;
+		returnVal = asyncService.writeAccountTransactions(transactionList);
+		return returnVal;
 	}
 
 	private  List<Account> createCustomerAccount(int noOfCustomers, String key_suffix) throws ExecutionException, InterruptedException {

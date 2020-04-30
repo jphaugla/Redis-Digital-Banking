@@ -131,7 +131,7 @@ public class BankingController {
 	@GetMapping("/statusChangeTransactions")
 
 	public List<String> generateStatusChangeTransactions(@RequestParam String transactionStatus)
-			throws ParseException {
+			throws ParseException, IllegalAccessException, ExecutionException, InterruptedException {
 		 logger.debug("generateStatusChangeTransactions transactionStatus=" + transactionStatus);
 		 ArrayList<String> changeReport = new ArrayList<>();
 		 changeReport.add("Before Change");

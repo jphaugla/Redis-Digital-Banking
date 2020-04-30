@@ -27,6 +27,7 @@ In this tutorial, a java spring boot application is run through a jar file to su
  * [lettuce tips redis spring boot](https://www.bytepitch.com/blog/redis-integration-spring-boot/)
  * [spring data Reference in domain](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/main/java/example/springdata/redis/repositories/Person.java)
  * [spring data reference test code](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/test/java/example/springdata/redis/repositories/PersonRepositoryTests.java)
+ * [spring async tips](https://dzone.com/articles/effective-advice-on-spring-async-part-1)
 ## Getting Started
 1. Prepare Docker environment-see the Prerequisites section above...
 2. Pull this github into a directory
