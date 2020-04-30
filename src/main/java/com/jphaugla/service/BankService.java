@@ -395,6 +395,7 @@ public class BankService {
 	}
 
 	public String testPipeline(Integer noOfRecords) {
+		BankGenerator.Timer pipelineTimer = new BankGenerator.Timer();
 		this.redisTemplate.executePipelined(new RedisCallback<Object>() {
 			@Override
 			public Object doInRedis(RedisConnection connection)
@@ -409,6 +410,9 @@ public class BankService {
 				return null;
 			}
 		});
+		pipelineTimer.end();
+		logger.info("Finished writing " + noOfRecords + " created in " +
+				pipelineTimer.getTimeTakenSeconds() + " seconds.");
 		return "Done";
 	}
 
