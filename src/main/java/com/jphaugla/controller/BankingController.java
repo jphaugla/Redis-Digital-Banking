@@ -127,6 +127,13 @@ public class BankingController {
 		keycounts = bankService.transactionStatusReport();
 		return keycounts;
 	}
+	@GetMapping("/returned_transactions")
+
+	public List<String> getReturnedTransaction () {
+		List<String> returnsCount = new ArrayList<>();
+		returnsCount = bankService.getTransactionReturns();
+		return returnsCount;
+	}
 
 	@GetMapping("/statusChangeTransactions")
 
@@ -169,13 +176,7 @@ public class BankingController {
 		transactions = bankService.getAccountTransactions(accountNo, startDate, endDate);
 		return transactions;
 	}
-	@GetMapping("/returned_transactions")
 
-	public List<Transaction> getReturnedTransaction () {
-		List<Transaction> transactions = new ArrayList<>();
-		transactions = bankService.getTransactionReturns();
-		return transactions;
-	}
 
 	@GetMapping("/addTag")
 

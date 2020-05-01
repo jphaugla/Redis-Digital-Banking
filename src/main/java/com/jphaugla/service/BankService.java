@@ -134,6 +134,7 @@ public class BankService {
 	}
 
 	public List<Customer> getCustomerByStateCity(String state, String city){
+
 		List<Customer> customerIDList = customerRepository.findByStateAbbreviationAndCity(state, city);
 		return customerIDList;
 	}
@@ -284,13 +285,18 @@ public class BankService {
 	};
 
 
-	public List<Transaction> getTransactionReturns() {
-		List <Transaction> transactions = new ArrayList<>();
-		List <TransactionReturn> transactionReturns = new ArrayList<>();
-		for (TransactionReturn transactionReturn : transactionReturns = (List<TransactionReturn>) transactionReturnRepository.findAll()) {
-			transactions.addAll(transactionRepository.findByTransactionReturn(transactionReturn.getReasonCode()));
+	public List<String> getTransactionReturns() {
+		List <String> reportList = new ArrayList<>();
+		List<TransactionReturn> transactionReturns = (List<TransactionReturn>) transactionReturnRepository.findAll();
+		String reasonCode = null;
+		String reportLine=null;
+		for (TransactionReturn transactionReturn : transactionReturns) {
+			reasonCode = transactionReturn.getReasonCode();
+			int total = Math.toIntExact(redisTemplate.opsForSet().size("Transaction:transactionReturn:" + reasonCode));
+			reportLine = reasonCode + ":" + total;
+			reportList.add(reportLine);
 		}
-		return transactions;
+		return reportList;
 	}
 	public List<String> transactionStatusReport() {
 		List<String> reportList = new ArrayList<>();
