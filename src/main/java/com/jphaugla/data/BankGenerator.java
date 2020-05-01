@@ -280,8 +280,8 @@ public class BankGenerator {
             55802, 61704, 55435, 61101, 16821);
 	public static List<String> dob = Arrays.asList("08/19/1964", "07/14/1984", "01/20/2000", "06/10/1951", "11/22/1995",
 			"12/13/1954", "08/12/1943", "11/29/1964", "02/01/1994", "07/12/1944");
-    public static String[] transactionStatus = {"POSTED", "AUTHORIZED", "SETTLED", "POSTED", "AUTHORIZED", "SETTLED",
-			"POSTED", "AUTHORIZED", "POSTED", "POSTED", "AUTHORIZED", "POSTED",
+    public static String[] transactionStatus = {"POSTED", "AUTHORIZED", "SETTLED", "POSTED", "POSTED", "POSTED",
+			"POSTED", "POSTED", "POSTED", "POSTED", "POSTED", "POSTED",
 			"POSTED", "POSTED", "POSTED", "POSTED", "POSTED", "POSTED",
 			"POSTED", "POSTED","POSTED","POSTED","POSTED","POSTED","POSTED","POSTED"};
 	public static String[] States = {"IL", "MN", "MN", "MN", "MN","CA", "AZ", "AL", "AK", "TX", "WY", "PR",
