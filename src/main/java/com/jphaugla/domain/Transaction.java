@@ -22,7 +22,7 @@ public class Transaction  {
     private @Indexed String accountNo;
     // debit or credit
     private String amountType;
-    private @Indexed String merchant;
+    private @Indexed String merchantAccount;
     private String referenceKeyType;
     private String referenceKeyValue;
     private String originalAmount;

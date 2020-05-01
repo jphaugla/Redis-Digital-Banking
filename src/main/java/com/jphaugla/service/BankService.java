@@ -143,7 +143,7 @@ public class BankService {
 		return customerIDList;
 	}
 
-	private List<Transaction> getTransactionByStatus(String transactionStatus){
+	private List<Transaction> getTransactionByStatus(String transactionStatus) throws ExecutionException, InterruptedException {
 		List<Transaction> transactions = transactionRepository.findByStatus(transactionStatus);
 		return transactions;
 	}
@@ -222,20 +222,14 @@ public class BankService {
 		List <String> transactionIDs = new ArrayList<>();
 		List <Transaction> transactions = new ArrayList<>();
 
-		String merchantKey = "Transaction:merchant:" + in_merchant;
-		String accountKey = "Transaction:accountNo:" + account;
-		String tempkey = "Tempkey:" + in_merchant + ":" + account;
-		String ztempkey = "TempZkey:postdate";
-		logger.info("accountKey is " + accountKey + " merchantkey is " + merchantKey);
-		if(redisTemplate.hasKey(merchantKey)) {
+		String merchantAccountKeyName = "Transaction:merchantAccount" + ":" + in_merchant + ":" +account;
+		logger.info(" merchantkey is " + merchantAccountKeyName);
+		if(redisTemplate.hasKey(merchantAccountKeyName)) {
 			logger.info("found the merchant");
 		}
-		if (redisTemplate.hasKey(accountKey)) {
-			logger.info("found the account");
-		}
 
-		redisTemplate.opsForSet().intersectAndStore(accountKey, merchantKey,ztempkey);
-		Set resultSet = redisTemplate.opsForSet().intersect(ztempkey,
+
+		Set resultSet = redisTemplate.opsForSet().intersect(merchantAccountKeyName,
 					redisTemplate.opsForZSet().range("Trans:PostDate",startDate.getTime(),endDate.getTime()));
 		transactionIDs.addAll(resultSet);
 		logger.info("result set returned:", resultSet.size());
@@ -361,7 +355,7 @@ public class BankService {
 		merchantRepository.save(merchant);
 
 		Transaction transaction = new Transaction("1234", "acct01",
-				"Debit", merchant.getName(), "referenceKeyType",
+				"Debit", merchant.getName() + ":" + "acct01", "referenceKeyType",
 				"referenceKeyValue", "323.23",  "323.22", "1631",
 				"Test Transaction", init_date, settle_date, post_date,
 				"POSTED", null, "ATM665");

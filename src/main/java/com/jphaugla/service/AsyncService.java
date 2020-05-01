@@ -13,6 +13,7 @@ import org.springframework.data.redis.hash.ObjectHashMapper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -137,7 +138,7 @@ public class AsyncService {
         for (Transaction transaction:transactionList) {
             String hashName = "Transaction:" + transaction.getTranId();
             String idxSetName = hashName + ":idx";
-            String merchantIndexName = "Transaction:merchant:" + transaction.getMerchant();
+            String merchantIndexName = "Transaction:merchant:" + transaction.getMerchantAccount();
             String accountIndexName = "Transaction:account:" + transaction.getAccountNo();
             String statusIndexName = "Transaction:status:" + transaction.getStatus();
             redisTemplate.opsForSet().add(idxSetName, merchantIndexName, accountIndexName, statusIndexName);

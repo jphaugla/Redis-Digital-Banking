@@ -21,6 +21,10 @@ public interface TransactionRepository extends CrudRepository<Transaction, Strin
 
 	List<Transaction> findByTransactionReturn(String transactionReturn);
 	List<Transaction> findByStatus(String transactionStatus);
+	//  cannot do two columns as will get cross-slot error on the intersection
+	List<Transaction> findByStatusAndAcctNo(String transactionStatus, String accountNo);
+	//  cannot do two columns as will get cross-slot error on the intersection
+	List<Transaction> findByMerchantAccount(String transactionStatus, String merchant);
 
 
 }

@@ -110,6 +110,12 @@ public class BankGenerator {
 		}
         return merchants;
 	};
+	public static List<String> createMerchantName () {
+		List<String> merchants = new ArrayList<>();
+		// for(String merchant:issuers) {
+		merchants = Arrays.asList(issuers);
+		return merchants;
+	}
 
 	public static List<TransactionReturn> createTransactionReturnList() {
 		List<TransactionReturn> transactionReturns = new ArrayList<>();
@@ -201,7 +207,8 @@ public class BankGenerator {
         else{
             transaction.setAmountType("Credit");
         }
-        transaction.setMerchant(merchants.get(randomLocation).getName());
+        transaction.setMerchantAccount(merchants.get(randomLocation).getName() + ":"
+				+ transaction.getAccountNo());
 
         transaction.setReferenceKeyType("reftype");
         transaction.setReferenceKeyValue("thisRef");
@@ -274,8 +281,8 @@ public class BankGenerator {
 	public static List<String> dob = Arrays.asList("08/19/1964", "07/14/1984", "01/20/2000", "06/10/1951", "11/22/1995",
 			"12/13/1954", "08/12/1943", "11/29/1964", "02/01/1994", "07/12/1944");
     public static String[] transactionStatus = {"POSTED", "AUTHORIZED", "SETTLED", "POSTED", "AUTHORIZED", "SETTLED",
-			"POSTED", "AUTHORIZED", "SETTLED", "POSTED", "AUTHORIZED", "SETTLED",
-			"POSTED", "AUTHORIZED", "POSTED", "AUTHORIZED", "POSTED", "AUTHORIZED",
+			"POSTED", "AUTHORIZED", "POSTED", "POSTED", "AUTHORIZED", "POSTED",
+			"POSTED", "POSTED", "POSTED", "POSTED", "POSTED", "POSTED",
 			"POSTED", "POSTED","POSTED","POSTED","POSTED","POSTED","POSTED","POSTED"};
 	public static String[] States = {"IL", "MN", "MN", "MN", "MN","CA", "AZ", "AL", "AK", "TX", "WY", "PR",
 			"MN", "IL", "MN", "MN", "IL", "IA", "WI", "SD", "ND", "MD", "CT", "WI", "KS", "IN","DE","TN"

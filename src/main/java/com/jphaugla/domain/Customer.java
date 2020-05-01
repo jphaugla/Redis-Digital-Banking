@@ -17,7 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 
-@RedisHash("Customer")
+@RedisHash("{Customer}")
 public class Customer {
     private  @Id String customerId;
     private  String addressLine1;
