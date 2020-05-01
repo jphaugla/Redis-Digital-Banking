@@ -81,7 +81,7 @@ Shows a benchmark test run of  generateData.sh on GCP servers
   * getByPhone.sh - get customers by phone only
   * getByStateCity.sh - get customers by city and state
   * getByZipLastname.sh -  get customers by zipcode and lastname.
-  * getReturns.sh - get all returned transactions
+  * getReturns.sh - get returned transactions count by reason code
   * getTags.sh - get all tags on an account
   * getTransaction.sh - get one transaction by its transaction ID
   * getTransactionStatus.sh - see count of transactions by account status of PENDING, AUTHORIZED, SETTLED

@@ -287,11 +287,15 @@ public class BankService {
 
 	public List<String> getTransactionReturns() {
 		List <String> reportList = new ArrayList<>();
+		logger.info("entering getTransactionReturns");
 		List<TransactionReturn> transactionReturns = (List<TransactionReturn>) transactionReturnRepository.findAll();
+		logger.info("have the returncodes" + transactionReturns);
 		String reasonCode = null;
 		String reportLine=null;
 		for (TransactionReturn transactionReturn : transactionReturns) {
 			reasonCode = transactionReturn.getReasonCode();
+			logger.info("getting size for reasonCode" + reasonCode);
+
 			int total = Math.toIntExact(redisTemplate.opsForSet().size("Transaction:transactionReturn:" + reasonCode));
 			reportLine = reasonCode + ":" + total;
 			reportList.add(reportLine);
