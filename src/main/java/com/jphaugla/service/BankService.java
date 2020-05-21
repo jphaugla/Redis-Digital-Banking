@@ -192,7 +192,8 @@ public class BankService {
 	//   writeTransaction using crud without future
 	private void writeTransaction(Transaction transaction) {
 		transactionRepository.save(transaction);
-		if(transaction.getPostingDate() != null) redisTemplate.opsForZSet().add("Trans:PostDate",
+		String keyname="Trans:PostDate:" + transaction.getAccountNo();
+		if(transaction.getPostingDate() != null) redisTemplate.opsForZSet().add(keyname,
 				transaction.getTranId(), transaction.getPostingDate().getTime());
 	}
 	// writeTransaction using crud with Future
@@ -229,9 +230,9 @@ public class BankService {
 			logger.info("found the merchant");
 		}
 
-
+        String keyName = "Trans:PostDate:" + account;
 		Set resultSet = redisTemplate.opsForSet().intersect(merchantAccountKeyName,
-					redisTemplate.opsForZSet().range("Trans:PostDate",startDate.getTime(),endDate.getTime()));
+					redisTemplate.opsForZSet().range(keyName,startDate.getTime(),endDate.getTime()));
 		transactionIDs.addAll(resultSet);
 		logger.info("result set returned:", resultSet.size());
 		transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);
@@ -253,8 +254,9 @@ public class BankService {
 	private List<Transaction> getAccountsByDateRange(String accountKey, Date startDate, Date endDate) {
 		List <String> transactionIDs = new ArrayList<>();
 		List <Transaction> transactions = new ArrayList<>();
+		String keyName = "Trans:PostDate:" + accountKey;
 		Set resultSet = redisTemplate.opsForSet().intersect(accountKey,
-				redisTemplate.opsForZSet().range("Trans:PostDate", startDate.getTime(), endDate.getTime()));
+				redisTemplate.opsForZSet().range(keyName, startDate.getTime(), endDate.getTime()));
 		transactionIDs.addAll(resultSet);
 		logger.info("result set returned:", resultSet.size());
 		transactions = (List<Transaction>) transactionRepository.findAllById(transactionIDs);

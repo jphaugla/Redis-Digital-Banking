@@ -46,7 +46,8 @@ public class AsyncService {
     public CompletableFuture<Integer> writeTransaction(Transaction transaction) {
         transactionRepository.save(transaction);
         if (transaction.getPostingDate() != null) {
-            redisTemplate.opsForZSet().add("Trans:PostDate", transaction.getTranId(),
+            String keyname="Trans:PostDate:" + transaction.getAccountNo();
+            redisTemplate.opsForZSet().add(keyname, transaction.getTranId(),
                     transaction.getPostingDate().getTime());
         }
         return CompletableFuture.completedFuture(0);
@@ -112,10 +113,11 @@ public class AsyncService {
             public Object doInRedis(RedisConnection connection)
                     throws DataAccessException {
                 connection.openPipeline();
-                String postedDateSet = "Trans:PostDate";
+
                 for (Transaction tx : transactionList) {
                     if(tx.getPostingDate() != null) {
-                        connection.zAdd(postedDateSet.getBytes(),  tx.getPostingDate().getTime(),
+                        String keyname="Trans:PostDate:" + tx.getAccountNo();
+                        connection.zAdd(keyname.getBytes(),  tx.getPostingDate().getTime(),
                                 tx.getTranId().getBytes());
                     }
                 }
