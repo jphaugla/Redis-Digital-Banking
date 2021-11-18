@@ -9,7 +9,8 @@ In this tutorial, a java spring boot application is run through a jar file to su
  * Redis easily handles high write transaction volume
  * Redis has no tombstone issues and can upsert posted transactions over pending
  * Redis scales vertically (large nodes)  and horizontally (many nodes)
- * Redis spring crud reporitory automates secondary index creation and usage
+ * Redis spring crud repository automates secondary index creation and usage
+ * Redis spring crud repository also allows putting TTL on the hash
 
 ## Requirements
 * Docker installed on your local system, see [Docker Installation Instructions](https://docs.docker.com/engine/installation/).
@@ -95,6 +96,7 @@ Shows a benchmark test run of  generateData.sh on GCP servers
 Very exciting that using the CRUD repository, a field in the java class with the Indexed annotation is treated as an index.
 <a href="" rel="Spring Indexes"><img src="images/Springindexes.png" alt="" /></a>
 ### User class
+Note this same RedisHash annotation is used in the Transaction class to also set a TTL automatically
 ```bash
 @RedisHash("user")
 public class User {

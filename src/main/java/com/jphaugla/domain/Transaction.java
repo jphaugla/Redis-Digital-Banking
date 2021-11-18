@@ -14,8 +14,8 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Setter
-
-@RedisHash("Transaction")
+//  setting unrealistically low TTL here for demo purposes
+@RedisHash(value="Transaction", timeToLive = 1000)
 
 public class Transaction  {
     private @Id String tranId;
