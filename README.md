@@ -56,6 +56,7 @@ source scripts/setEnv.sh
 docker-compose up -d
 ```
 NOTE:  if running redis outside of docker, must turn on notify-keyspace-events or the index entries will not automatically delete
+NOTE2:  this is now automated in the code so this cli entry is not needed
 ```bash
 redis-cli
 config set notify-keyspace-events KEA
