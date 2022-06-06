@@ -1,0 +1,19 @@
+app:
+  corePoolSize: ${CORE_POOLSIZE}
+  transactionTtl: ${TRANSACTION_TTL}
+spring:
+  redis:
+    timeout: 1000ms
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    password: ${REDIS_PASSWORD}
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+logging:
+  level:
+    com:
+      jphaugla: DEBUG
+    org:
+      springframework: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'

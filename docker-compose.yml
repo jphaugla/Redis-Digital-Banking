@@ -2,10 +2,13 @@ version: '3'
 services:
 
   redis:
-    image: "arm64v8/redis:latest"
+    # image: "arm64v8/redis:latest"
+    image: redis/redis-stack:edge
     container_name: redis
     ports:
       - "6379:6379"
+    environment:
+      REDIS_ARGS: "--requirepass jasonrocks --notify-keyspace-events KEA"
     volumes:
       - ./redis_data:/data
 

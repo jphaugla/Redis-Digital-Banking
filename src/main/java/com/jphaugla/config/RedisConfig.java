@@ -4,6 +4,7 @@ import io.lettuce.core.ClientOptions;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -13,12 +14,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
+import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -30,14 +34,16 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableConfigurationProperties(RedisProperties.class)
 @EnableAsync
-@EnableRedisRepositories
+@EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP, basePackages = {
+        "com.aaaaa.bbbbb.persistence.model.repository" }, keyspaceNotificationsConfigParameter = "")
 
 @ComponentScan("com.jphaugla")
 public class RedisConfig {
-    @Value("${redisHost:localhost}")
-    private String redisHost;
-    @Value("${redisPort:6379}")
-    private int redisPort;
+    @Autowired
+    private Environment env;
+    @Autowired
+    private @Value("${app.corePoolSize:20}")
+    int corePoolSize;
 
     @Bean(destroyMethod = "shutdown")
     ClientResources clientResources() {
@@ -46,7 +52,13 @@ public class RedisConfig {
 
     @Bean
     public RedisStandaloneConfiguration redisStandaloneConfiguration() {
-        return new RedisStandaloneConfiguration(redisHost, redisPort);
+        RedisStandaloneConfiguration redisServerConf = new RedisStandaloneConfiguration();
+        redisServerConf.setHostName(env.getProperty("spring.redis.host"));
+        redisServerConf.setPort(Integer.parseInt(env.getProperty("spring.redis.port")));
+        if(env.getProperty("spring.redis.password") != null && !env.getProperty("spring.redis.password").isEmpty()) {
+            redisServerConf.setPassword(RedisPassword.of(env.getProperty("spring.redis.password")));
+        }
+        return redisServerConf;
     }
 
     @Bean
@@ -100,7 +112,7 @@ public class RedisConfig {
     public TaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 //        on large 64 core machine, drove setCorePoolSize to 200 to really spike performance
-        executor.setCorePoolSize(20);
+        executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(1000);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setThreadNamePrefix("Async-");
