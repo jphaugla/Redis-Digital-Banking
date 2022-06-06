@@ -11,6 +11,7 @@ In this tutorial, a java spring boot application is run through a jar file to su
  * Redis scales vertically (large nodes)  and horizontally (many nodes)
  * Redis spring crud repository automates secondary index creation and usage
  * Redis spring crud repository also allows putting TTL on the hash
+ * Redis crud repository also removes index entries along with the TTL so long as notify-keyspace-events is set in redis
 
 ## Requirements
 * Docker installed on your local system, see [Docker Installation Instructions](https://docs.docker.com/engine/installation/).
@@ -53,6 +54,11 @@ source scripts/setEnv.sh
 * Open terminal and change to the github home where you will see the docker-compose.yml file, then: 
 ```bash
 docker-compose up -d
+```
+NOTE:  if running redis outside of docker, must turn on notify-keyspace-events or the index entries will not automatically delete
+```bash
+redis-cli
+config set notify-keyspace-events KEA
 ```
 
 ## The spring java code
