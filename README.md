@@ -29,19 +29,31 @@ In this tutorial, a java spring boot application is run through a jar file to su
  * [spring data Reference in domain](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/main/java/example/springdata/redis/repositories/Person.java)
  * [spring data reference test code](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/test/java/example/springdata/redis/repositories/PersonRepositoryTests.java)
  * [spring async tips](https://dzone.com/articles/effective-advice-on-spring-async-part-1)
+
+### TTL Links
+ * [Spring setup for TTL github issue](https://github.com/spring-projects/spring-data-redis/issues/1299)
+ * [Spring expirations documentation](https://docs.spring.io/spring-data/redis/docs/current/reference/html/#redis.repositories.expirations)
+ * [Keyspace notifications in redis](https://redis.io/docs/manual/keyspace-notifications/)
+ * [Keyspace Notifications Listener](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/listener/KeyspaceEventMessageListener.html)
+ * [TTL Redis Spring StackOverflow](https://stackoverflow.com/questions/48379229/redis-expired-indexes-are-not-deleted)
+
 ## Getting Started
-1. Prepare Docker environment-see the Prerequisites section above...
-2. Pull this github into a directory
+* Prepare Docker environment-see the Pre-requisites section above...
+* Pull this github into a directory
 ```bash
 git clone https://github.com/jphaugla/Redis-Digital-Banking.git
 ```
-3. Refer to the notes for redis Docker images used but don't get too bogged down as docker compose handles everything except for a few admin steps on tomcat.
- * [https://hub.docker.com/r/bitnami/redis/](https://hub.docker.com/r/bitnami/redis/)  
-4. Open terminal and change to the github home where you will see the docker-compose.yml file, then: 
+* Refer to the notes for redis Docker images used but don't get too bogged down as docker compose handles everything except for a few admin steps on tomcat.
+  * [Redis stack docker instructions](https://redis.io/docs/stack/get-started/install/docker/)
+* Set the environment for Redis Host, Redis Port, etc
+  * Edit scripts/setEnv.sh
+```bash
+source scripts/setEnv.sh
+```
+* Open terminal and change to the github home where you will see the docker-compose.yml file, then: 
 ```bash
 docker-compose up -d
 ```
-
 
 ## The spring java code
 This is basic spring links
@@ -53,23 +65,25 @@ The java code demonstrates common API actions with the data persisted in REDIS. 
 <a href="" rel="Tables Structures Used"><img src="images/Tables.png" alt="" /></a>
 ## To execute the code
 (Alternatively, this can be run through intelli4j)
+NOTE:  Transaction TTL is hardcoded in domain/Transaction.  Edit as needed.
+The corresponding CRUD created index entries will also delete as long as redis has notify keyspace events turned on (see links)
 
-1. Compile the code
+* Compile the code
 ```bash
 mvn package
 ```
-2.  run the jar file.   
+*  run the jar file.   
 ```bash
 java -jar target/redis-0.0.1-SNAPSHOT.jar
 ```
-3.  Test the application from a separate terminal window.  This script uses an API call to generate sample banking customers, accounts and transactions.  It uses Spring ASYNC techniques to generate higher load.  A flag chooses between running the transactions pipelined in Redis or in normal non-pipelined method.
+* Test the application from a separate terminal window.  This script uses an API call to generate sample banking customers, accounts and transactions.  It uses Spring ASYNC techniques to generate higher load.  A flag chooses between running the transactions pipelined in Redis or in normal non-pipelined method.
 ```bash
 ./scripts/generateData.sh
 ```
 Shows a benchmark test run of  generateData.sh on GCP servers
 <a href="" rel="Generate Data Benchmark"><img src="images/Benchmark.png" alt="" /></a>
 
-4.  Investigate the APIs in ./scripts
+* Investigate the APIs in ./scripts
   * addTag.sh - add a tag to a transaction.  Tags allow user to mark  transactions to be in a buckets such as Travel or Food for budgetary tracking purposes
   * generateLots.sh - for server testing to generate higher load levels.  Use with startAppservers.sh 
   * getByAccount.sh - find transactions for an account between a date range

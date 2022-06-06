@@ -7,6 +7,7 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    # need notify-keyspace-events to automatically remove CRUD created set members for indexing on TTL expiration
     environment:
       REDIS_ARGS: "--requirepass jasonrocks --notify-keyspace-events KEA"
     volumes:
