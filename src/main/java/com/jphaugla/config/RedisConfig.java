@@ -70,6 +70,7 @@ public class RedisConfig {
     }
     @Bean
     LettucePoolingClientConfiguration lettucePoolConfig(ClientOptions options, ClientResources dcr){
+
         return LettucePoolingClientConfiguration.builder()
                 .poolConfig(new GenericObjectPoolConfig())
                 .clientOptions(options)
@@ -91,6 +92,13 @@ public class RedisConfig {
                 lettucePoolConfig);
         RedisConnectionFactory factory =  lettuceConnectionFactory;
         return factory;
+    }
+    @Bean
+    public RedisConnection redisConnection(RedisConnectionFactory redisConnectionFactory) {
+        RedisConnection connection = redisConnectionFactory.getConnection();
+        String keyspaceNotificationsConfigParameter = "KEA";
+        connection.setConfig("notify-keyspace-events", keyspaceNotificationsConfigParameter);
+        return connection;
     }
 
     @Bean
