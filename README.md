@@ -30,6 +30,7 @@ In this tutorial, a java spring boot application is run through a jar file to su
  * [spring data Reference in domain](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/main/java/example/springdata/redis/repositories/Person.java)
  * [spring data reference test code](https://github.com/spring-projects/spring-data-examples/blob/master/redis/repositories/src/test/java/example/springdata/redis/repositories/PersonRepositoryTests.java)
  * [spring async tips](https://dzone.com/articles/effective-advice-on-spring-async-part-1)
+ * [CRUD or RedisTemplate](https://engineering.salesforce.com/lessons-learned-using-spring-data-redis-f3121f89bff9/)
 
 ### TTL Links
  * [Spring setup for TTL github issue](https://github.com/spring-projects/spring-data-redis/issues/1299)
@@ -74,12 +75,14 @@ The java code demonstrates common API actions with the data persisted in REDIS. 
 (Alternatively, this can be run through intelli4j)
 NOTE:  Transaction TTL is hardcoded in domain/Transaction.  Edit as needed.
 The corresponding CRUD created index entries will also delete as long as redis has notify keyspace events turned on (see links)
+Note:  Notify is now also in the config/RedisConfig.java
 
 * Compile the code
 ```bash
 mvn package
 ```
-*  run the jar file.   
+
+* run the jar file.   
 ```bash
 java -jar target/redis-0.0.1-SNAPSHOT.jar
 ```

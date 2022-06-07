@@ -35,7 +35,11 @@ import java.util.concurrent.Executor;
 @EnableConfigurationProperties(RedisProperties.class)
 @EnableAsync
 @EnableRedisRepositories(enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP, basePackages = {
-        "com.aaaaa.bbbbb.persistence.model.repository" }, keyspaceNotificationsConfigParameter = "")
+        "com.aaaaa.bbbbb.persistence.model.repository" }, keyspaceNotificationsConfigParameter = "",
+        shadowCopy = RedisKeyValueAdapter.ShadowCopy.OFF)
+//  can also disable shadowCopy here with shadowCopy = ShadowCopy.OFF
+//  the net effect of the above is that Spring Data Redis will no longer create the Shadow copy but will still subscribe
+//  for the Keyspace events and purge the SET of the entry
 
 @ComponentScan("com.jphaugla")
 public class RedisConfig {
@@ -77,14 +81,7 @@ public class RedisConfig {
                 .clientResources(dcr)
                 .build();
     }
-
-    /*
-    public RedisConnectionFactory connectionFactory(RedisStandaloneConfiguration redisStandaloneConfiguration,
-                                                    LettucePoolingClientConfiguration lettucePoolConfig) {
-        return new LettuceConnectionFactory(redisStandaloneConfiguration, lettucePoolConfig);
-    }
-
-     */
+    
     @Bean
     public RedisConnectionFactory connectionFactory(RedisStandaloneConfiguration redisStandaloneConfiguration,
                                                     LettucePoolingClientConfiguration lettucePoolConfig) {
