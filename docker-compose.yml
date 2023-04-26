@@ -1,24 +1,15 @@
-version: '3'
+version: '3.9'
 services:
 
   redis:
     # image: "arm64v8/redis:latest"
-    image: redis/redis-stack:edge
+    image: redis/redis-stack:latest
     container_name: redis
     ports:
       - "6379:6379"
+      - "8001:8001"
     # need notify-keyspace-events to automatically remove CRUD created set members for indexing on TTL expiration
     environment:
       REDIS_ARGS: "--requirepass jasonrocks --notify-keyspace-events KEA"
     volumes:
       - ./redis_data:/data
-
-  insight:
-    image: "redislabs/redisinsight:latest"
-    container_name: insight
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./redisinsight:/db
-    depends_on:
-      - redis

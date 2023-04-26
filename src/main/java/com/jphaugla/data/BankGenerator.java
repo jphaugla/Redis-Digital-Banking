@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class BankGenerator {
 	private static final Logger logger = LoggerFactory.getLogger(BankGenerator.class);
 
@@ -28,6 +29,7 @@ public class BankGenerator {
 	public static String  timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(currentDate);
 	
 	public static List<String> whiteList = new ArrayList<String>();
+
 
 	public static String getRandomCustomerId(int noOfCustomers){
 		return BASE + new Double(Math.random()*noOfCustomers).intValue() + "";
@@ -220,6 +222,7 @@ public class BankGenerator {
 		} else if (randomLocation == 13) {
 			transaction.setTransactionReturn(transactionReturns.get(1).getReasonCode());
 		}
+		// transaction.setExpiration(expiration);
         return transaction;
 	}
 
